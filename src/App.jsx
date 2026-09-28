@@ -16,6 +16,8 @@ import AddProductPage from "./pages/AddProductPage";
 import CategoriesPage from "./pages/CategoriesPage";
 import CategoriesManagePage from "./pages/CategoriesManagePage";
 import ContactPage from "./pages/ContactPage";
+import EditProductPage from "./pages/EditProductPage";
+import FloatingWhatsApp from "./components/FloatingWhatsApp";
 
 // Scroll to top on route change
 function ScrollToTop() {
@@ -51,10 +53,12 @@ export default function App() {
               {/* Seller / Admin Management Routes */}
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/dashboard/products/new" element={<AddProductPage />} />
+              <Route path="/dashboard/products/edit/:id" element={<EditProductPage />} />
               <Route path="/dashboard/categories" element={<CategoriesManagePage />} />
             </Routes>
           </main>
           <Footer />
+          <FloatingWhatsApp />
         </div>
       </BrowserRouter>
     </CatalogProvider>

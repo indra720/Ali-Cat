@@ -263,6 +263,14 @@ export default function DashboardPage() {
                           <ExternalLink className="w-3.5 h-3.5" />
                         </Link>
 
+                        <Link
+                          to={`/dashboard/products/edit/${prod.id}`}
+                          className="p-1.5 rounded-md hover:bg-oranza-50 text-gray-500 hover:text-oranza-600 transition-colors"
+                          title="Edit Product Details & Media"
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                        </Link>
+
                         <button
                           onClick={() => {
                             if (window.confirm(`Delete "${prod.title}" from catalog?`)) {

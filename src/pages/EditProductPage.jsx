@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { 
   ArrowLeft, 
   Plus, 
@@ -10,52 +10,90 @@ import {
   FileText, 
   Sparkles, 
   PhoneCall,
-  Eye,
-  Upload
+  Upload,
+  RotateCcw
 } from "lucide-react";
 import { useCatalog } from "../context/CatalogContext";
 
-export default function AddProductPage() {
-  const { categories, addProduct, company } = useCatalog();
+export default function EditProductPage() {
+  const { id } = useParams();
   const navigate = useNavigate();
+  const { products, categories, updateProduct, company } = useCatalog();
+
+  const product = products.find((p) => p.id === id);
 
   // Form State
   const [title, setTitle] = useState("");
   const [sku, setSku] = useState("");
-  const [categoryId, setCategoryId] = useState(categories[0]?.id || "furniture");
-  const [priceType, setPriceType] = useState("fixed"); // "fixed" or "on_request"
+  const [categoryId, setCategoryId] = useState("");
+  const [priceType, setPriceType] = useState("fixed");
   const [price, setPrice] = useState("");
   const [shortDescription, setShortDescription] = useState("");
   const [fullDescription, setFullDescription] = useState("");
-  const [whatsappNumber, setWhatsappNumber] = useState(company.defaultWhatsApp);
+  const [whatsappNumber, setWhatsappNumber] = useState("");
   const [isFeatured, setIsFeatured] = useState(false);
 
-  // Images state (list of image URLs)
+  // Images state
   const [imageUrlInput, setImageUrlInput] = useState("");
-  const [images, setImages] = useState([
-    "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=1200&q=80"
-  ]);
+  const [images, setImages] = useState([]);
 
   // Video state
-  const [hasVideo, setHasVideo] = useState(true);
-  const [videoUrl, setVideoUrl] = useState("https://www.youtube.com/embed/ScMzIvxBSi4");
-  const [videoTitle, setVideoTitle] = useState("Product Walkthrough & Texture Demonstration");
+  const [hasVideo, setHasVideo] = useState(false);
+  const [videoUrl, setVideoUrl] = useState("");
+  const [videoTitle, setVideoTitle] = useState("");
 
-  // Dynamic Specifications key-value pairs
-  const [specifications, setSpecifications] = useState([
-    { id: "1", key: "Material", value: "Premium Fabric" },
-    { id: "2", key: "Color", value: "Brown / Orange" },
-    { id: "3", key: "Size", value: "7 ft" },
-    { id: "4", key: "Warranty", value: "3 Years Manufacturer Warranty" },
-  ]);
+  // Dynamic Specifications
+  const [specifications, setSpecifications] = useState([]);
 
-  const handleAddImage = () => {
+  // Prepopulate form when product is found
+  useEffect(() => {
+    if (product) {
+      setTitle(product.title || "");
+      setSku(product.sku || "");
+      setCategoryId(product.categoryId || categories[0]?.id || "furniture");
+      setPriceType(product.priceType || "fixed");
+      setPrice(product.price !== null && product.price !== undefined ? String(product.price) : "");
+      setShortDescription(product.shortDescription || "");
+      setFullDescription(product.fullDescription || "");
+      setWhatsappNumber(product.whatsappNumber || company.defaultWhatsApp);
+      setIsFeatured(Boolean(product.isFeatured));
+      setImages(product.images || []);
+      setHasVideo(Boolean(product.video?.url));
+      setVideoUrl(product.video?.url || "");
+      setVideoTitle(product.video?.title || "Product Video Demo");
+      setSpecifications(product.specifications || []);
+    }
+  }, [product, categories, company]);
+
+  if (!product) {
+    return (
+      <div className="min-h-screen bg-surface-secondary flex items-center justify-center p-4">
+        <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center border border-gray-200 shadow-sm">
+          <h2 className="text-xl font-bold text-ink">Product Not Found</h2>
+          <p className="text-xs text-ink-secondary mt-1">
+            Cannot find product ID: {id} to edit.
+          </p>
+          <Link
+            to="/dashboard"
+            className="mt-5 inline-flex items-center gap-1.5 px-4 py-2 rounded-brand bg-oranza-500 text-white text-xs font-semibold"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Return to Dashboard</span>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle URL image addition
+  const handleAddImageUrl = () => {
     if (imageUrlInput.trim()) {
       setImages([...images, imageUrlInput.trim()]);
       setImageUrlInput("");
     }
   };
 
+  // Handle Local Computer Image File Upload
   const handleFileUpload = (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
@@ -69,10 +107,11 @@ export default function AddProductPage() {
     });
   };
 
-  const handleRemoveImage = (indexToRemove) => {
-    setImages(images.filter((_, idx) => idx !== indexToRemove));
+  const handleRemoveImage = (idxToRemove) => {
+    setImages(images.filter((_, idx) => idx !== idxToRemove));
   };
 
+  // Specifications Handlers
   const handleAddSpecRow = () => {
     setSpecifications([
       ...specifications,
@@ -95,21 +134,18 @@ export default function AddProductPage() {
 
     const selectedCat = categories.find((c) => c.id === categoryId);
 
-    const newProduct = {
+    const updatedFields = {
       title,
-      sku: sku.trim() || `SKU-${Date.now().toString().slice(-4)}`,
+      sku: sku.trim() || product.sku,
       categoryId,
-      categoryName: selectedCat ? selectedCat.name : "General",
+      categoryName: selectedCat ? selectedCat.name : product.categoryName,
       priceType,
       price: priceType === "fixed" && price ? parseFloat(price) : null,
-      currency: "₹",
       shortDescription,
       fullDescription,
       whatsappNumber: whatsappNumber.replace(/[^0-9]/g, "") || company.defaultWhatsApp,
       isFeatured,
-      images: images.length > 0 ? images : [
-        "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=1200&q=80"
-      ],
+      images: images.length > 0 ? images : product.images,
       video: hasVideo && videoUrl.trim() ? {
         type: "embed",
         url: videoUrl.trim(),
@@ -118,8 +154,8 @@ export default function AddProductPage() {
       specifications: specifications.filter((s) => s.key.trim() && s.value.trim()),
     };
 
-    const created = addProduct(newProduct);
-    navigate(`/products/${created.slug}`);
+    updateProduct(product.id, updatedFields);
+    navigate(`/products/${product.slug}`);
   };
 
   return (
@@ -134,7 +170,7 @@ export default function AddProductPage() {
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Dashboard</span>
           </Link>
-          <span className="text-xs text-ink-tertiary">Catalog Entry Form</span>
+          <span className="text-xs text-ink-tertiary">Edit Product: #{product.sku}</span>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
@@ -143,10 +179,10 @@ export default function AddProductPage() {
             <div className="border-b border-gray-100 pb-3">
               <h2 className="text-lg font-bold text-ink flex items-center gap-2">
                 <FileText className="w-5 h-5 text-oranza-500" />
-                <span>Basic Product Information</span>
+                <span>Edit Product Information</span>
               </h2>
               <p className="text-xs text-ink-secondary mt-0.5">
-                Enter primary details that will appear on the catalog cards.
+                Update product title, category, pricing, and description.
               </p>
             </div>
 
@@ -158,10 +194,9 @@ export default function AddProductPage() {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Modern Sofa"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-brand border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-oranza-500/20 focus:border-oranza-500"
+                  className="w-full px-3.5 py-2.5 rounded-brand border border-gray-300 text-sm focus:outline-none focus:border-oranza-500"
                 />
               </div>
 
@@ -171,10 +206,9 @@ export default function AddProductPage() {
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. SOFA-MOD-001"
                   value={sku}
                   onChange={(e) => setSku(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-brand border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-oranza-500/20 focus:border-oranza-500"
+                  className="w-full px-3.5 py-2.5 rounded-brand border border-gray-300 text-sm focus:outline-none focus:border-oranza-500"
                 />
               </div>
 
@@ -185,7 +219,7 @@ export default function AddProductPage() {
                 <select
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-brand border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-oranza-500/20 focus:border-oranza-500 bg-white"
+                  className="w-full px-3.5 py-2.5 rounded-brand border border-gray-300 text-sm focus:outline-none focus:border-oranza-500 bg-white"
                 >
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -237,10 +271,9 @@ export default function AddProductPage() {
               </label>
               <input
                 type="text"
-                placeholder="e.g. Premium 3-seater sofa with high density foam."
                 value={shortDescription}
                 onChange={(e) => setShortDescription(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-brand border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-oranza-500/20 focus:border-oranza-500"
+                className="w-full px-3.5 py-2.5 rounded-brand border border-gray-300 text-sm focus:outline-none focus:border-oranza-500"
               />
             </div>
 
@@ -249,48 +282,46 @@ export default function AddProductPage() {
                 Full Description
               </label>
               <textarea
-                rows={3}
-                placeholder="Detailed craftmanship, comfort highlights, room fit recommendations..."
+                rows={4}
                 value={fullDescription}
                 onChange={(e) => setFullDescription(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-brand border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-oranza-500/20 focus:border-oranza-500"
+                className="w-full px-3.5 py-2.5 rounded-brand border border-gray-300 text-sm focus:outline-none focus:border-oranza-500"
               />
             </div>
 
             <div className="flex items-center gap-2 pt-1">
               <input
                 type="checkbox"
-                id="isFeatured"
+                id="isFeaturedEdit"
                 checked={isFeatured}
                 onChange={(e) => setIsFeatured(e.target.checked)}
                 className="w-4 h-4 text-oranza-600 rounded border-gray-300 focus:ring-oranza-500"
               />
-              <label htmlFor="isFeatured" className="text-xs font-semibold text-ink cursor-pointer flex items-center gap-1">
+              <label htmlFor="isFeaturedEdit" className="text-xs font-semibold text-ink cursor-pointer flex items-center gap-1">
                 <Sparkles className="w-3.5 h-3.5 text-oranza-500" />
                 <span>Feature this product prominently on the Homepage</span>
               </label>
             </div>
           </div>
 
-          {/* 2. Media: Images & Product Video */}
+          {/* 2. Media: Photos (URL + Computer File Upload) & Video */}
           <div className="bg-white p-6 sm:p-8 rounded-3xl border border-gray-200 shadow-sm space-y-6">
             <div className="border-b border-gray-100 pb-3">
               <h2 className="text-lg font-bold text-ink flex items-center gap-2">
                 <ImageIcon className="w-5 h-5 text-oranza-500" />
-                <span>Product Media (Photos & Video)</span>
+                <span>Product Media & Video Walkthrough</span>
               </h2>
               <p className="text-xs text-ink-secondary mt-0.5">
-                Visual demonstration is the key factor in catalog inquiry conversion.
+                Add photos via direct URL or upload from your computer.
               </p>
             </div>
 
-            {/* Images Management */}
             <div>
               <label className="block text-xs font-semibold text-ink mb-1.5">
-                Product Image Gallery (Upload from Computer or Add Web URLs)
+                Upload New Photos (From Computer or Web URL)
               </label>
               <div className="flex flex-col sm:flex-row gap-3">
-                {/* File upload from computer */}
+                {/* Direct file upload from computer */}
                 <label className="cursor-pointer inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-brand bg-oranza-50 hover:bg-oranza-100 text-oranza-700 font-bold text-xs border border-oranza-200 transition-colors">
                   <Upload className="w-4 h-4 text-oranza-600" />
                   <span>Browse Device Photos</span>
@@ -314,7 +345,7 @@ export default function AddProductPage() {
                   />
                   <button
                     type="button"
-                    onClick={handleAddImage}
+                    onClick={handleAddImageUrl}
                     className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-ink text-xs font-bold rounded-brand transition-colors"
                   >
                     + Add URL
@@ -323,7 +354,7 @@ export default function AddProductPage() {
               </div>
 
               {/* Thumbnails */}
-              <div className="mt-3 flex items-center gap-3 overflow-x-auto pb-2">
+              <div className="mt-4 flex items-center gap-3 overflow-x-auto pb-2">
                 {images.map((url, i) => (
                   <div key={i} className="relative group w-20 h-20 rounded-xl overflow-hidden border border-gray-200 shrink-0">
                     <img src={url} alt={`img-${i}`} className="w-full h-full object-cover" />
@@ -344,12 +375,12 @@ export default function AddProductPage() {
               </div>
             </div>
 
-            {/* Product Video Setup */}
+            {/* Video Setup */}
             <div className="pt-4 border-t border-gray-100 space-y-4">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-ink flex items-center gap-1.5">
                   <Video className="w-4 h-4 text-oranza-500" />
-                  <span>Include Product Video Demonstration</span>
+                  <span>Product Video Demonstration</span>
                 </label>
                 <input
                   type="checkbox"
@@ -367,7 +398,7 @@ export default function AddProductPage() {
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g. Sofa Comfort & Texture Walkthrough"
+                      placeholder="e.g. Sofa Comfort Walkthrough"
                       value={videoTitle}
                       onChange={(e) => setVideoTitle(e.target.value)}
                       className="w-full px-3 py-2 rounded-brand border border-gray-300 text-xs bg-white focus:outline-none focus:border-oranza-500"
@@ -376,7 +407,7 @@ export default function AddProductPage() {
 
                   <div>
                     <label className="block text-[11px] font-semibold text-ink-secondary mb-1">
-                      Video Embed URL (YouTube, Vimeo, or MP4)
+                      Video Embed URL (YouTube/Vimeo/MP4)
                     </label>
                     <input
                       type="url"
@@ -391,7 +422,7 @@ export default function AddProductPage() {
             </div>
           </div>
 
-          {/* 3. Structured Technical Specifications */}
+          {/* 3. Specifications */}
           <div className="bg-white p-6 sm:p-8 rounded-3xl border border-gray-200 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <div>
@@ -400,7 +431,7 @@ export default function AddProductPage() {
                   <span>Technical Specifications Sheet</span>
                 </h2>
                 <p className="text-xs text-ink-secondary mt-0.5">
-                  Key-value attributes (e.g. Material: Fabric, Color: Brown, Size: 7 ft).
+                  Update product dimensions, materials, and warranty.
                 </p>
               </div>
 
@@ -443,36 +474,29 @@ export default function AddProductPage() {
             </div>
           </div>
 
-          {/* 4. WhatsApp Inquiry Destination */}
+          {/* 4. WhatsApp Number */}
           <div className="bg-white p-6 sm:p-8 rounded-3xl border border-gray-200 shadow-sm space-y-4">
             <div className="border-b border-gray-100 pb-3">
               <h2 className="text-lg font-bold text-ink flex items-center gap-2">
                 <PhoneCall className="w-5 h-5 text-[#25D366]" />
-                <span>WhatsApp Inquiry Number</span>
+                <span>WhatsApp Inquiry Routing</span>
               </h2>
-              <p className="text-xs text-ink-secondary mt-0.5">
-                Customer inquiries for this item will be directed to this WhatsApp number.
-              </p>
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-ink mb-1">
-                WhatsApp Phone Number (with Country Code)
+                WhatsApp Phone Number
               </label>
               <input
                 type="text"
                 value={whatsappNumber}
                 onChange={(e) => setWhatsappNumber(e.target.value)}
-                placeholder="919876543210"
                 className="w-full sm:w-80 px-3.5 py-2.5 rounded-brand border border-gray-300 text-sm focus:outline-none focus:border-oranza-500"
               />
-              <p className="text-[11px] text-gray-400 mt-1">
-                Include country code without '+' (e.g. 919876543210 for India).
-              </p>
             </div>
           </div>
 
-          {/* Submit Action */}
+          {/* Actions */}
           <div className="flex items-center justify-end gap-3 pt-2">
             <Link
               to="/dashboard"
@@ -485,7 +509,7 @@ export default function AddProductPage() {
               className="px-8 py-3 rounded-brand bg-oranza-500 hover:bg-oranza-600 text-white font-bold text-sm shadow-glow-orange transition-all flex items-center gap-2"
             >
               <Check className="w-4 h-4" />
-              <span>Publish Product to Catalog</span>
+              <span>Save & Update Catalog</span>
             </button>
           </div>
         </form>

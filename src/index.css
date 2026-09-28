@@ -71,3 +71,24 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Print Specification Sheet Styling */
+@media print {
+  nav, footer, .fixed, button, a[href^="/dashboard"], a[href^="/login"], [role="button"] {
+    display: none !important;
+  }
+  body {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+  }
+  .bg-surface-secondary {
+    background: transparent !important;
+  }
+  .shadow-sm, .shadow-md, .shadow-lg, .shadow-xl, .shadow-2xl {
+    box-shadow: none !important;
+  }
+  .border {
+    border-color: #E5E7EB !important;
+  }
+}
+

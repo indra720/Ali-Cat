@@ -13,13 +13,16 @@ import {
   FileText, 
   ChevronRight,
   Eye,
-  Check
+  Check,
+  QrCode,
+  Printer
 } from "lucide-react";
 import { useCatalog } from "../context/CatalogContext";
 import VideoPlayer from "../components/VideoPlayer";
 import WhatsAppButton from "../components/WhatsAppButton";
 import WhatsAppIcon from "../components/icons/WhatsAppIcon";
 import ProductCard from "../components/ProductCard";
+import QRCodeModal from "../components/QRCodeModal";
 
 export default function ProductDetailPage() {
   const { slug } = useParams();
@@ -33,6 +36,7 @@ export default function ProductDetailPage() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [activeMediaTab, setActiveMediaTab] = useState("gallery"); // "gallery" or "video"
   const [copiedLink, setCopiedLink] = useState(false);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
 
   if (!product) {
     return (
@@ -100,22 +104,42 @@ export default function ProductDetailPage() {
             <span className="text-ink font-semibold truncate max-w-xs">{product.title}</span>
           </nav>
 
-          <button
-            onClick={handleShare}
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-ink-secondary hover:text-ink bg-white px-3 py-1.5 rounded-md border border-gray-200 shadow-sm transition-all"
-          >
-            {copiedLink ? (
-              <>
-                <Check className="w-3.5 h-3.5 text-green-600" />
-                <span className="text-green-600 font-semibold">Link Copied!</span>
-              </>
-            ) : (
-              <>
-                <Share2 className="w-3.5 h-3.5" />
-                <span>Share Catalog Item</span>
-              </>
-            )}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsQrModalOpen(true)}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink-secondary hover:text-oranza-600 bg-white px-3 py-1.5 rounded-md border border-gray-200 shadow-sm transition-all"
+              title="Showroom QR Code"
+            >
+              <QrCode className="w-3.5 h-3.5 text-oranza-500" />
+              <span className="hidden sm:inline">Showroom QR</span>
+            </button>
+
+            <button
+              onClick={() => window.print()}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink-secondary hover:text-ink bg-white px-3 py-1.5 rounded-md border border-gray-200 shadow-sm transition-all"
+              title="Print / Save PDF Spec Sheet"
+            >
+              <Printer className="w-3.5 h-3.5 text-gray-500" />
+              <span className="hidden sm:inline">Print Spec Sheet</span>
+            </button>
+
+            <button
+              onClick={handleShare}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink-secondary hover:text-ink bg-white px-3 py-1.5 rounded-md border border-gray-200 shadow-sm transition-all"
+            >
+              {copiedLink ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-green-600" />
+                  <span className="text-green-600 font-semibold">Link Copied!</span>
+                </>
+              ) : (
+                <>
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Share</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Main Product Showcase Card */}
@@ -280,6 +304,25 @@ export default function ProductDetailPage() {
                         </div>
                       ))}
                     </div>
+
+                    {/* Spec Sheet Quick Utilities */}
+                    <div className="flex items-center gap-2 pt-2.5">
+                      <button
+                        onClick={() => window.print()}
+                        className="flex-1 py-2 px-3 rounded-lg border border-gray-200 hover:border-oranza-400 hover:bg-oranza-50/50 text-ink-secondary hover:text-oranza-700 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-2xs"
+                      >
+                        <Printer className="w-3.5 h-3.5 text-oranza-500" />
+                        <span>Print / Save Spec Sheet (PDF)</span>
+                      </button>
+                      <button
+                        onClick={() => setIsQrModalOpen(true)}
+                        className="py-2 px-3 rounded-lg border border-gray-200 hover:border-oranza-400 hover:bg-oranza-50/50 text-ink-secondary hover:text-oranza-700 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-2xs"
+                        title="Generate Showroom QR Code"
+                      >
+                        <QrCode className="w-3.5 h-3.5 text-oranza-500" />
+                        <span>Showroom QR</span>
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -354,6 +397,13 @@ export default function ProductDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Showroom QR Code Modal */}
+      <QRCodeModal
+        isOpen={isQrModalOpen}
+        onClose={() => setIsQrModalOpen(false)}
+        product={product}
+      />
     </div>
   );
 }
