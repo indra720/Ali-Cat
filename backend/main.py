@@ -1,12 +1,9 @@
-"""
-=============================================================================
-ALI-CATALOG BACKEND - PHASE 3: AUTHENTICATION & SECURITY
-=============================================================================
-FastAPI + SQLAlchemy + JWT Authentication + bcrypt Password Hashing
-"""
-
-from fastapi import FastAPI, Depends, HTTPException, status, Query
+import os
+import uuid
+import shutil
+from fastapi import FastAPI, Depends, HTTPException, status, Query, UploadFile, File, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from typing import List, Optional
 
@@ -20,17 +17,25 @@ from database import engine, get_db
 # ---------------------------------------------------------------------------
 # 1. Automatic Database Table Creation
 # ---------------------------------------------------------------------------
-# Ye line users, categories, products saari SQL tables create karegi
 models.Base.metadata.create_all(bind=engine)
 
 # ---------------------------------------------------------------------------
-# 2. FastAPI App Setup
+# 2. FastAPI App Setup & Static Files Directory Mounting
 # ---------------------------------------------------------------------------
 app = FastAPI(
     title="Ali-Eco Catalog System API",
-    description="Full-stack Backend with JWT Authentication, bcrypt, and Role-Based Access Control",
-    version="3.0.0"
+    description="Full-stack Backend with JWT Authentication, SQLite Database, and Media File Uploads",
+    version="4.0.0"
 )
+
+# Static Files Directory setup
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+UPLOADS_IMAGES_DIR = os.path.join(STATIC_DIR, "uploads", "images")
+os.makedirs(UPLOADS_IMAGES_DIR, exist_ok=True)
+
+# Mount /static to serve uploaded images directly via HTTP URLs
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 # ---------------------------------------------------------------------------
 # 3. CORS Middleware
@@ -335,3 +340,136 @@ def track_whatsapp_click(product_id: Optional[int] = None, db: Session = Depends
     """Public: WhatsApp click tracking"""
     count = crud.record_enquiry_click(db, product_id)
     return {"message": "WhatsApp enquiry recorded successfully", "current_enquiries": count}
+
+# ---------------------------------------------------------------------------
+# 10. FILE & IMAGE UPLOAD API (DEVICE IMAGE PICKER)
+# ---------------------------------------------------------------------------
+ALLOWED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".avif"}
+
+@app.post("/api/v1/uploads/image", tags=["Uploads"])
+async def upload_product_image(
+    request: Request,
+    file: UploadFile = File(..., description="Select image file from computer (.jpg, .png, .webp)")
+):
+    """
+    Frontend 'Add/Edit Product' Form ke liye Device Image Upload API.
+    File ko disk (/static/uploads/images/) me save karta hai aur direct live URL return karta hai.
+    """
+    # Step 1: Validate file extension
+    ext = os.path.splitext(file.filename)[1].lower()
+    if ext not in ALLOWED_IMAGE_EXTENSIONS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid file type '{ext}'. Allowed image formats: {', '.join(ALLOWED_IMAGE_EXTENSIONS)}"
+        )
+
+    # Step 2: Create a collision-safe unique filename
+    clean_name = "".join(c for c in file.filename if c.isalnum() or c in "._-").strip()
+    unique_filename = f"img_{uuid.uuid4().hex[:8]}_{clean_name}"
+    save_path = os.path.join(UPLOADS_IMAGES_DIR, unique_filename)
+
+    # Step 3: Stream and save raw binary bytes to server disk
+    try:
+        with open(save_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Could not save file to disk: {str(e)}"
+        )
+    finally:
+        file.file.close()
+
+    # Step 4: Build dynamic live public URL
+    base_url = str(request.base_url).rstrip("/")
+    image_url = f"{base_url}/static/uploads/images/{unique_filename}"
+
+    return {
+        "status": "success",
+        "filename": unique_filename,
+        "url": image_url,
+        "content_type": file.content_type
+    }
+
+# ---------------------------------------------------------------------------
+# 11. DASHBOARD ANALYTICS API (METRICS & TOP PRODUCTS)
+# ---------------------------------------------------------------------------
+@app.get("/api/v1/analytics/dashboard", response_model=schemas.DashboardAnalyticsResponse, tags=["Analytics"])
+def get_dashboard_metrics(db: Session = Depends(get_db)):
+    """
+    Frontend 'DashboardPage.jsx' ke Top 4 Stat Cards aur Analytics ke liye live data:
+    - total_products: Kitne products live hain
+    - total_categories: Active categories count
+    - total_views: Total product page views across catalog
+    - total_enquiries: Total WhatsApp click inquiries
+    - products_with_video: Interactive media products count
+    - top_enquired_products: Top 5 products having maximum WhatsApp inquiries
+    - top_viewed_products: Top 5 products having highest visitor views
+    - category_distribution: Har category me kitne products hain
+    """
+    return crud.get_dashboard_analytics(db)
+
+# ---------------------------------------------------------------------------
+# 12. CONTACT & INQUIRY FORM APIS (CUSTOMER LEADS)
+# ---------------------------------------------------------------------------
+@app.post("/api/v1/contact", response_model=schemas.ContactResponse, status_code=status.HTTP_201_CREATED, tags=["Contact"])
+def submit_contact_inquiry(inquiry: schemas.ContactCreate, db: Session = Depends(get_db)):
+    """
+    Public Endpoint: Customer 'ContactPage.jsx' par form submit karta hai.
+    Saves inquiry to SQL Database (contact_messages table).
+    """
+    return crud.create_contact_message(db, inquiry)
+
+@app.get("/api/v1/contact/messages", response_model=List[schemas.ContactResponse], tags=["Contact"])
+def list_contact_inquiries(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=100),
+    db: Session = Depends(get_db),
+    current_user = Depends(auth.require_seller_or_admin)  # 🔒 Protected: Seller or Admin Only!
+):
+    """
+    Protected Endpoint: Seller/Admin dashboard me saare customer inquiries/leads list karta hai.
+    """
+    return crud.get_contact_messages(db, skip=skip, limit=limit)
+
+@app.put("/api/v1/contact/messages/{message_id}/read", response_model=schemas.ContactResponse, tags=["Contact"])
+def mark_inquiry_as_read(
+    message_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(auth.require_seller_or_admin)  # 🔒 Protected: Seller or Admin Only!
+):
+    """
+    Protected Endpoint: Inquiry ko read mark karta hai.
+    """
+    updated = crud.mark_contact_message_read(db, message_id)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Inquiry message not found")
+    return updated
+
+# ---------------------------------------------------------------------------
+# 13. STORE / COMPANY PROFILE SETTINGS APIS
+# ---------------------------------------------------------------------------
+@app.get("/api/v1/settings", response_model=schemas.SettingsResponse, tags=["Settings"])
+def get_store_settings(db: Session = Depends(get_db)):
+    """
+    Public Endpoint:
+    Frontend (Navbar, Footer, Floating WhatsApp, Contact Page) ke liye
+    live store details (Name, default WhatsApp, Showroom address, email, phone) fetch karta hai.
+    """
+    return crud.get_store_settings(db)
+
+@app.put("/api/v1/settings", response_model=schemas.SettingsResponse, tags=["Settings"])
+def update_store_settings(
+    settings_data: schemas.SettingsUpdate,
+    db: Session = Depends(get_db),
+    current_user = Depends(auth.require_admin)  # 🔒 Protected: Super Admin Only!
+):
+    """
+    Protected Endpoint:
+    Super Admin dashboard se store ki details (WhatsApp hotline, email, address, etc.) update karta hai.
+    """
+    return crud.update_store_settings(db, settings_data)
+
+
+
+

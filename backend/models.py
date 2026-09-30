@@ -85,3 +85,40 @@ class Product(Base):
 
     seller_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     seller = relationship("User", back_populates="products")
+
+
+# ---------------------------------------------------------------------------
+# 4. Contact Message SQL Table (Customer Inquiries & Leads)
+# ---------------------------------------------------------------------------
+class ContactMessage(Base):
+    __tablename__ = "contact_messages"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    name = Column(String, nullable=False)
+    phone = Column(String, nullable=False)
+    email = Column(String, nullable=True)
+    category = Column(String, default="General Inquiry")
+    message = Column(Text, nullable=False)
+    is_read = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class StoreSettings(Base):
+    """
+    Store / Company Settings Table (Singleton Row id=1)
+    Store ka global configuration (WhatsApp number, name, showroom address, email, etc.)
+    """
+    __tablename__ = "store_settings"
+
+    id = Column(Integer, primary_key=True, default=1)
+    name = Column(String, default="Oranza Living & Lifestyle")
+    tagline = Column(String, default="Inspiring Spaces with Curated Design")
+    default_whatsapp = Column(String, default="919876543210")
+    phone_display = Column(String, default="+91 98765 43210")
+    email = Column(String, default="catalog@oranzalifestyle.com")
+    address = Column(String, default="Plot 42, Design District, Outer Ring Road, Bengaluru, India")
+    instagram = Column(String, default="https://instagram.com")
+    catalog_count_text = Column(String, default="500+ Curated Products")
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+

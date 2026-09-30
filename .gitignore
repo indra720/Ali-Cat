@@ -33,4 +33,7 @@ __pycache__/
 .env
 *.db
 *.sqlite3
+backend/static/uploads/images/*
+!backend/static/uploads/images/.gitkeep
+
 

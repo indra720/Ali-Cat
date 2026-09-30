@@ -7,7 +7,7 @@ Ye functions database session (db) ka use karke actual SQL queries execute karte
 """
 
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 import re
 import models
 import schemas
@@ -218,3 +218,139 @@ def record_enquiry_click(db: Session, product_id: int = None):
             db.commit()
             return db_product.enquiries
     return 1
+
+# ===========================================================================
+# DASHBOARD ANALYTICS CRUD
+# ===========================================================================
+
+def get_dashboard_analytics(db: Session):
+    """
+    SQL Aggregation Queries run karke Seller/Admin Dashboard metrics calculate karta hai
+    """
+    # 1. Total Products
+    total_products = db.query(func.count(models.Product.id)).scalar() or 0
+
+    # 2. Total Categories
+    total_categories = db.query(func.count(models.Category.id)).scalar() or 0
+
+    # 3. Total Views (SUM of views column across all products)
+    total_views = db.query(func.coalesce(func.sum(models.Product.views), 0)).scalar() or 0
+
+    # 4. Total WhatsApp Enquiries (SUM of enquiries column across all products)
+    total_enquiries = db.query(func.coalesce(func.sum(models.Product.enquiries), 0)).scalar() or 0
+
+    # 5. Products with HD Video
+    products_with_video = db.query(func.count(models.Product.id)).filter(
+        models.Product.video_url.isnot(None),
+        models.Product.video_url != ""
+    ).scalar() or 0
+
+    # 6. Top 5 Most Inquired Products
+    top_enquired = db.query(models.Product).order_by(
+        models.Product.enquiries.desc(), models.Product.views.desc()
+    ).limit(5).all()
+
+    # 7. Top 5 Most Viewed Products
+    top_viewed = db.query(models.Product).order_by(
+        models.Product.views.desc()
+    ).limit(5).all()
+
+    # 8. Category Distribution with product counts
+    categories = db.query(models.Category).all()
+    category_distribution = []
+    for cat in categories:
+        count = db.query(func.count(models.Product.id)).filter(models.Product.category_id == cat.id).scalar() or 0
+        category_distribution.append({
+            "category_id": cat.id,
+            "category_name": cat.name,
+            "product_count": count
+        })
+
+    return {
+        "total_products": total_products,
+        "total_categories": total_categories,
+        "total_views": int(total_views),
+        "total_enquiries": int(total_enquiries),
+        "products_with_video": products_with_video,
+        "top_enquired_products": top_enquired,
+        "top_viewed_products": top_viewed,
+        "category_distribution": category_distribution
+    }
+
+# ===========================================================================
+# CONTACT MESSAGES & INQUIRIES CRUD
+# ===========================================================================
+
+def create_contact_message(db: Session, msg: schemas.ContactCreate):
+    """Customer inquiry form ko database me save karta hai (INSERT INTO contact_messages ...)"""
+    db_msg = models.ContactMessage(
+        name=msg.name.strip(),
+        phone=msg.phone.strip(),
+        email=msg.email.strip() if msg.email else None,
+        category=msg.category,
+        message=msg.message.strip(),
+        is_read=False
+    )
+    db.add(db_msg)
+    db.commit()
+    db.refresh(db_msg)
+    return db_msg
+
+def get_contact_messages(db: Session, skip: int = 0, limit: int = 50):
+    """Saare customer inquiries fetch karta hai (Newest first)"""
+    return db.query(models.ContactMessage).order_by(models.ContactMessage.id.desc()).offset(skip).limit(limit).all()
+
+def mark_contact_message_read(db: Session, message_id: int):
+    """Inquiry ko read/completed mark karta hai"""
+    msg = db.query(models.ContactMessage).filter(models.ContactMessage.id == message_id).first()
+    if msg:
+        msg.is_read = True
+        db.commit()
+        db.refresh(msg)
+        return msg
+    return None
+
+# ===========================================================================
+# STORE SETTINGS CRUD
+# ===========================================================================
+
+def get_store_settings(db: Session):
+    """
+    Store settings fetch karta hai. Agar database me row exist nahi karti to
+    default row create karke return karta hai (Singleton pattern).
+    """
+    settings = db.query(models.StoreSettings).filter(models.StoreSettings.id == 1).first()
+    if not settings:
+        settings = models.StoreSettings(
+            id=1,
+            name="Oranza Living & Lifestyle",
+            tagline="Inspiring Spaces with Curated Design",
+            default_whatsapp="919876543210",
+            phone_display="+91 98765 43210",
+            email="catalog@oranzalifestyle.com",
+            address="Plot 42, Design District, Outer Ring Road, Bengaluru, India",
+            instagram="https://instagram.com",
+            catalog_count_text="500+ Curated Products"
+        )
+        db.add(settings)
+        db.commit()
+        db.refresh(settings)
+    return settings
+
+def update_store_settings(db: Session, update_data: schemas.SettingsUpdate):
+    """
+    Store settings update karta hai. Sirf wahi fields update hoti hain jo frontend se provide ki gayi hon.
+    """
+    settings = get_store_settings(db)
+    
+    update_dict = update_data.model_dump(exclude_unset=True)
+    for key, value in update_dict.items():
+        if value is not None:
+            setattr(settings, key, value)
+            
+    db.commit()
+    db.refresh(settings)
+    return settings
+
+
+
