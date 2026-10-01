@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<title>FastAPI Zero to Hero: Project-Based Full-Stack Backend Handbook</title>
+<style>
+  @page {
+    size: A4;
+    margin: 18mm 16mm 18mm 16mm;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #1e293b;
+    line-height: 1.6;
+    font-size: 13px;
+    background: #fff;
+    margin: 0;
+    padding: 0;
+  }
+  .cover {
+    page-break-after: always;
+    text-align: center;
+    padding: 100px 20px 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .badge {
+    display: inline-block;
+    background: #ea580c;
+    color: #fff;
+    padding: 6px 16px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 24px;
+  }
+  .cover h1 {
+    font-size: 32px;
+    font-weight: 900;
+    color: #0f172a;
+    line-height: 1.2;
+    margin-bottom: 14px;
+  }
+  .cover h2 {
+    font-size: 17px;
+    color: #475569;
+    font-weight: 500;
+    margin-bottom: 24px;
+  }
+  .cover-meta {
+    margin-top: 50px;
+    padding: 20px;
+    border-top: 2px solid #e2e8f0;
+    font-size: 12.5px;
+    color: #64748b;
+    line-height: 1.8;
+  }
+  .page-break {
+    page-break-after: always;
+  }
+  h2.chapter-title {
+    font-size: 19px;
+    color: #0f172a;
+    border-bottom: 2.5px solid #ea580c;
+    padding-bottom: 6px;
+    margin-top: 26px;
+    margin-bottom: 14px;
+    font-weight: 800;
+  }
+  h3.section-title {
+    font-size: 14.5px;
+    color: #1e293b;
+    margin-top: 16px;
+    margin-bottom: 8px;
+    font-weight: 700;
+  }
+  p, li {
+    color: #334155;
+    font-size: 12.5px;
+  }
+  ul, ol {
+    margin-top: 4px;
+    margin-bottom: 10px;
+    padding-left: 22px;
+  }
+  li {
+    margin-bottom: 4px;
+  }
+  .callout {
+    background: #f8fafc;
+    border-left: 4px solid #ea580c;
+    padding: 10px 14px;
+    border-radius: 4px;
+    margin: 12px 0;
+    font-size: 12px;
+  }
+  .callout-blue {
+    background: #f0f9ff;
+    border-left: 4px solid #0284c7;
+    padding: 10px 14px;
+    border-radius: 4px;
+    margin: 12px 0;
+    font-size: 12px;
+  }
+  .callout-green {
+    background: #f0fdf4;
+    border-left: 4px solid #16a34a;
+    padding: 10px 14px;
+    border-radius: 4px;
+    margin: 12px 0;
+    font-size: 12px;
+  }
+  pre {
+    background: #0f172a;
+    color: #f8fafc;
+    padding: 12px 14px;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 11px;
+    line-height: 1.45;
+    margin: 10px 0;
+  }
+  code {
+    font-family: Consolas, "Courier New", monospace;
+    background: #f1f5f9;
+    color: #c2410c;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 11px;
+  }
+  pre code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 11.5px;
+  }
+  th, td {
+    border: 1px solid #cbd5e1;
+    padding: 7px 10px;
+    text-align: left;
+  }
+  th {
+    background: #f1f5f9;
+    font-weight: 700;
+    color: #0f172a;
+  }
+  tr:nth-child(even) {
+    background: #f8fafc;
+  }
+  .diagram {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    padding: 12px;
+    border-radius: 6px;
+    font-family: Consolas, monospace;
+    font-size: 10.5px;
+    line-height: 1.4;
+    margin: 10px 0;
+    white-space: pre;
+    color: #0f172a;
+  }
+  .tag {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 9.5px;
+    font-weight: 700;
+  }
+  .tag-get { background: #dbeafe; color: #1e40af; }
+  .tag-post { background: #dcfce7; color: #166534; }
+  .tag-put { background: #fef3c7; color: #92400e; }
+  .tag-delete { background: #fee2e2; color: #991b1b; }
+</style>
+</head>
+<body>
+
+<!-- COVER PAGE -->
+<div class="cover">
+  <div>
+    <span class="badge">Fresher to Full-Stack Developer Guide</span>
+    <h1>FASTAPI ZERO TO HERO</h1>
+    <h2>Project-Based Master Handbook: Building the Oranza Digital Catalog Backend</h2>
+    <p style="max-width: 620px; margin: 0 auto; color: #475569; font-size: 13.5px;">
+      Ek complete step-by-step practical guide jisme ek fresher beginner level se Python, FastAPI, SQLAlchemy ORM, SQLite, JWT Authentication, aur Media Uploads ko real-world project ke zariye seekh sakta hai.
+    </p>
+  </div>
+  <div class="cover-meta">
+    <strong>Project:</strong> Ali-Eco-Cat / Oranza Living & Lifestyle<br>
+    <strong>Tech Stack:</strong> Python 3.13 + FastAPI + SQLAlchemy 2.0 + SQLite + Pydantic v2 + React 18<br>
+    <strong>Total APIs Implemented:</strong> 25 Production-Ready REST Endpoints
+  </div>
+</div>
+
+<!-- TABLE OF CONTENTS -->
+<h2 class="chapter-title">📑 Table of Contents</h2>
+<ol style="line-height: 1.8; font-size: 13px;">
+  <li><strong>Chapter 1:</strong> Web Architecture & FastAPI Fundamentals (API Flow)</li>
+  <li><strong>Chapter 2:</strong> Project Directory Structure & Core Files Role</li>
+  <li><strong>Chapter 3:</strong> Database Connection & Session Management (database.py)</li>
+  <li><strong>Chapter 4:</strong> Authentication, Hashing & JWT Security (auth.py)</li>
+  <li><strong>Chapter 5:</strong> Categories Module (Taxonomy & Organization)</li>
+  <li><strong>Chapter 6:</strong> Products Engine: Search, Filtering & View Tracking</li>
+  <li><strong>Chapter 7:</strong> WhatsApp Consultation & Inquiry Click Tracker</li>
+  <li><strong>Chapter 8:</strong> Media File Uploads (Device Image Picker to Live URLs)</li>
+  <li><strong>Chapter 9:</strong> Dashboard Analytics & SQL Aggregation Metrics</li>
+  <li><strong>Chapter 10:</strong> Customer CRM Leads & Contact Inquiries</li>
+  <li><strong>Chapter 11:</strong> Store & Company Global Configuration (Singleton Pattern)</li>
+  <li><strong>Chapter 12:</strong> Excel & CSV Data Export Engine (StreamingResponse)</li>
+  <li><strong>Chapter 13:</strong> Top Interview Questions & Common Beginner Bugs Fixes</li>
+</ol>
+
+<div class="page-break"></div>
+
+<!-- CHAPTER 1 -->
+<h2 class="chapter-title">Chapter 1: Web Architecture & FastAPI Fundamentals</h2>
+<p>
+  Jab bhi hum koi modern web application (jaise Amazon, Flipkart, ya hamara Oranza Catalog) banate hain, to uske <strong>do main hisse</strong> hote hain:
+</p>
+<ul>
+  <li><strong>Frontend (Client):</strong> Jo user ko browser me screen par dikhta hai (React, HTML, CSS). Iska kaam sundar buttons, forms aur cards render karna hai.</li>
+  <li><strong>Backend (Server):</strong> Jo server par chalta hai (Python + FastAPI). Iska kaam business logic execute karna, security check karna, aur database me data save/fetch karna hai.</li>
+</ul>
+
+<h3 class="section-title">API kya hoti hai? (Beginner Analogy)</h3>
+<p>
+  API (Application Programming Interface) ek <strong>Restaurant ke Waiter</strong> ki tarah hoti hai:
+</p>
+<div class="callout-blue">
+  <strong>Client (Customer):</strong> Menu dekh kar waiter ko order deta hai ➔ <code>HTTP Request</code><br>
+  <strong>API (Waiter):</strong> Order ko kitchen (Database/Backend) tak le jata hai.<br>
+  <strong>Backend (Kitchen):</strong> Khana (Data) prepare karta hai.<br>
+  <strong>API (Waiter):</strong> Tayyar khana customer ki table par wapas le aata hai ➔ <code>HTTP Response (JSON)</code>.
+</div>
+
+<h3 class="section-title">Complete Request-Response Lifecycle Diagram</h3>
+<div class="diagram">
+[ React Frontend ] (Vite Port 3001)
+       │
+       │  1. HTTP Request (e.g. GET /api/v1/products?search=chair)
+       ▼
+[ FastAPI App Router ] (main.py Port 8000)
+       │
+       │  2. Security Guard (auth.py -> JWT Token verify karta hai)
+       ▼
+[ Pydantic Validation ] (schemas.py -> Request payload validate karta hai)
+       │
+       │  3. Controller/Service (crud.py -> Business logic execute karta hai)
+       ▼
+[ SQLAlchemy ORM ] (Python code ko SQL queries me convert karta hai)
+       │
+       │  4. SELECT * FROM products WHERE title LIKE '%chair%';
+       ▼
+[ SQLite Database ] (catalog.db file on disk)
+       │
+       │  5. Raw SQL rows return karta hai
+       ▼
+[ Pydantic Serialization ] (schemas.ProductResponse -> Clean JSON formatting)
+       │
+       │  6. HTTP 200 OK + JSON Response
+       ▼
+[ React Frontend ] (Screen par Product Cards render karta hai!)
+</div>
+
+<div class="page-break"></div>
+
+<!-- CHAPTER 2 -->
+<h2 class="chapter-title">Chapter 2: Project Directory Structure & Core Files</h2>
+<p>Hamare backend ka code clean modular architecture par structured hai:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>File Name</th>
+      <th>Primary Responsibility</th>
+      <th>Beginner Explanation</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>database.py</code></td>
+      <td>DB Connection & Engine</td>
+      <td>Database file (catalog.db) ka connection banata hai aur session provide karta hai.</td>
+    </tr>
+    <tr>
+      <td><code>models.py</code></td>
+      <td>SQLAlchemy ORM Tables</td>
+      <td>Database ki actual tables (Users, Products, Categories, Settings) define karta hai.</td>
+    </tr>
+    <tr>
+      <td><code>schemas.py</code></td>
+      <td>Pydantic Data Schemas</td>
+      <td>API me aane wale aur jane wale JSON data ka data-type aur validation check karta hai.</td>
+    </tr>
+    <tr>
+      <td><code>crud.py</code></td>
+      <td>Database Operations</td>
+      <td>Actual SQL queries (Create, Read, Update, Delete) perform karne wale Python functions.</td>
+    </tr>
+    <tr>
+      <td><code>auth.py</code></td>
+      <td>Security & JWT Tokens</td>
+      <td>Bcrypt password hashing aur JWT Bearer token generation/verification handle karta hai.</td>
+    </tr>
+    <tr>
+      <td><code>main.py</code></td>
+      <td>FastAPI Endpoints Entrypoint</td>
+      <td>Saare URLs/routes ko register karta hai, CORS handle karta hai aur server run karta hai.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 class="section-title">models.py vs schemas.py ka Difference (Sabse Bada Beginner Confusion)</h3>
+<div class="callout">
+  <strong>models.py (SQL Database Table):</strong> Ye database engine ko batata hai ki disk par hard drive me table kaise banegi (Columns: Integer, String, Primary Key, Foreign Key).<br><br>
+  <strong>schemas.py (Pydantic Validator):</strong> Ye network layer par client se aane wale JSON ko check karta hai (Jaise: email valid format me hai ya nahi, password kam se kam 6 characters ka hai ya nahi).
+</div>
+
+<div class="page-break"></div>
+
+<!-- CHAPTER 3 -->
+<h2 class="chapter-title">Chapter 3: Database Connection & Session Management (database.py)</h2>
+<p>
+  Database se connect karne ke liye hum <strong>SQLAlchemy ORM</strong> ka use karte hain. ORM ka full form hai <em>Object Relational Mapper</em>. Iska fayda ye hai ki hume manually complex SQL queries nahi likhni padti, balki Python classes aur objects ke zariye database handle hota hai!
+</p>
+
+<h3 class="section-title">database.py Code:</h3>
+<pre><code>from sqlalchemy import create_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
+
+# 1. Local SQLite file path
+SQLALCHEMY_DATABASE_URL = "sqlite:///./catalog.db"
+
+# 2. Database Engine create karna
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL, 
+    connect_args={"check_same_thread": False} # SQLite threading fix
+)
+
+# 3. SessionLocal: Har request ke liye DB session factory
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# 4. Declarative Base class jisse hamare saare models inherit karenge
+Base = declarative_base()
+
+# 5. Dependency Injection: get_db()
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db   # Route ko DB session hand-over karta hai
+    finally:
+        db.close() # Request poori hote hi session safely close ho jata hai
+</code></pre>
+
+<div class="callout-green">
+  <strong>Key Learning (Dependency Injection - get_db):</strong> <code>yield</code> keyword ka use karke FastAPI request aane par darwaza (session) kholta hai aur request complete hone par <code>finally</code> me darwaza band kar deta hai. Isse connection leak nahi hota!
+</div>
+
+<div class="page-break"></div>
+
+<!-- CHAPTER 4 -->
+<h2 class="chapter-title">Chapter 4: Authentication, Hashing & JWT Security (auth.py)</h2>
+
+<h3 class="section-title">Frontend Connection:</h3>
+<p>Connects to <code>LoginPage.jsx</code> aur <code>RegisterPage.jsx</code>.</p>
+
+<h3 class="section-title">Real Problem:</h3>
+<p>Database me users ka password plain text (e.g. <code>password123</code>) me save karna dangerous hai! Agar database leak ho gaya to saare accounts hack ho jayenge. Iske alawa, HTTP stateless hota hai, isliye har request par server ko user ki identity verify karni hoti hai.</p>
+
+<h3 class="section-title">Solution (Bcrypt + JWT):</h3>
+<ol>
+  <li><strong>Bcrypt Hashing:</strong> One-way cryptographic hash jo password ko random encrypted string bana deta hai jise decrypt nahi kiya ja sakta.</li>
+  <li><strong>JWT (JSON Web Token):</strong> Login hone par user ko ek digital identity pass milta hai: <code>eyJhbGciOi...</code></li>
+</ol>
+
+<div class="diagram">
+[ Client (React) ]                   [ FastAPI Backend ]
+        │                                     │
+        │ 1. POST /login {email, password}    │
+        ├────────────────────────────────────>│ 2. Check user in DB
+        │                                     │ 3. verify_password(raw, hashed)
+        │                                     │ 4. create_access_token(user.email, role)
+        │ 5. { access_token: "eyJ..." }       │
+        │<────────────────────────────────────┤
+        │                                     │
+        │ 6. Protected Call (Bearer Token)    │
+        │    GET /api/v1/auth/me              │
+        │    Header: Authorization: Bearer eyJ│
+        ├────────────────────────────────────>│ 7. decode_access_token()
+        │                                     │ 8. Role guard check (seller/admin)
+        │ 9. Returns user profile details     │
+        │<────────────────────────────────────┤
+</div>
+
+<h3 class="section-title">Code Example (Role Guards):</h3>
+<pre><code>def require_seller_or_admin(current_user = Depends(get_current_user)):
+    # Only Sellers or Admins can access
+    if current_user.role not in ["seller", "admin"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access forbidden: Requires Seller or Admin privileges"
+        )
+    return current_user
+</code></pre>
+
+<div class="page-break"></div>
+
+<!-- CHAPTER 5 & 6 -->
+<h2 class="chapter-title">Chapter 5 & 6: Products & Categories Catalog Engine</h2>
+
+<h3 class="section-title">Frontend Connection:</h3>
+<p><code>HomePage.jsx</code>, <code>CatalogPage.jsx</code>, <code>ProductDetailPage.jsx</code>, <code>AddProductPage.jsx</code>.</p>
+
+<h3 class="section-title">Key APIs:</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Endpoint</th>
+      <th>Method</th>
+      <th>Access</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>/api/v1/categories</code></td>
+      <td><span class="tag tag-get">GET</span></td>
+      <td>Public</td>
+      <td>Saari categories aur unke live product count return karta hai.</td>
+    </tr>
+    <tr>
+      <td><code>/api/v1/products</code></td>
+      <td><span class="tag tag-get">GET</span></td>
+      <td>Public</td>
+      <td>Category filter, keyword search, aur pagination handle karta hai.</td>
+    </tr>
+    <tr>
+      <td><code>/api/v1/products/{id}</code></td>
+      <td><span class="tag tag-get">GET</span></td>
+      <td>Public</td>
+      <td>Product detail view aur <strong>views counter auto +1</strong> karta hai.</td>
+    </tr>
+    <tr>
+      <td><code>/api/v1/products</code></td>
+      <td><span class="tag tag-post">POST</span></td>
+      <td>🔒 Seller/Admin</td>
+      <td>Naya product create karta hai (with JSON specifications & video URL).</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 class="section-title">Advanced Search & Filtering Logic (crud.py):</h3>
+<pre><code>def get_products(db: Session, category_id=None, search=None, is_featured=None, skip=0, limit=50):
+    query = db.query(models.Product)
+    
+    # 1. Category Filter
+    if category_id:
+        query = query.filter(models.Product.category_id == category_id)
+        
+    # 2. Case-Insensitive Multi-field Search
+    if search:
+        search_fmt = f"%{search.strip()}%"
+        query = query.filter(
+            or_(
+                models.Product.title.ilike(search_fmt),
+                models.Product.short_description.ilike(search_fmt),
+                models.Product.sku.ilike(search_fmt)
+            )
+        )
+        
+    # 3. Featured Products Filter
+    if is_featured is not None:
+        query = query.filter(models.Product.is_featured == is_featured)
+        
+    # 4. Pagination (skip & limit)
+    return query.offset(skip).limit(limit).all()
+</code></pre>
+
+<div class="page-break"></div>
+
+<!-- CHAPTER 7 & 8 -->
+<h2 class="chapter-title">Chapter 7 & 8: WhatsApp Analytics & Image Uploads</h2>
+
+<h3 class="section-title">7. WhatsApp Enquiry Click Tracker (POST /api/v1/enquiries/click)</h3>
+<p>
+  Digital catalog me customer cart checkout karne ki jagah seedha WhatsApp button dabata hai. Backend me har click par us product ka <code>enquiries</code> column <code>+1</code> ho jata hai. Isse showroom owner ko dashboard par pata chalta hai ki kis product me sabse zyada customer interest hai!
+</p>
+
+<h3 class="section-title">8. File & Image Upload System (POST /api/v1/uploads/image)</h3>
+<p>
+  <strong>Frontend Section:</strong> <code>AddProductPage.jsx</code> me computer se product photos upload karna.
+</p>
+
+<h3 class="section-title">Logic & Implementation Steps:</h3>
+<ol>
+  <li><strong>File Extension Check:</strong> Sirf valid images (<code>.jpg</code>, <code>.png</code>, <code>.webp</code>) allow honi chahiye.</li>
+  <li><strong>Collision-Safe Unique Filename:</strong> Agar do users <code>photo.jpg</code> upload karenge to pehli photo overwrite na ho, iske liye hum <code>uuid.uuid4().hex[:8]</code> attach karte hain: <code>img_a1b2c3d4_sofa.jpg</code>.</li>
+  <li><strong>Disk Streaming:</strong> Binary data ko <code>static/uploads/images/</code> folder me save karte hain.</li>
+  <li><strong>Live HTTP URL Generation:</strong> Client ko direct public link return hota hai: <code>http://127.0.0.1:8000/static/uploads/images/img_a1b2c3d4_sofa.jpg</code>.</li>
+</ol>
+
+<pre><code># main.py me static folder mount karna
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+@app.post("/api/v1/uploads/image")
+async def upload_product_image(request: Request, file: UploadFile = File(...)):
+    ext = os.path.splitext(file.filename)[1].lower()
+    if ext not in {".jpg", ".jpeg", ".png", ".webp"}:
+        raise HTTPException(status_code=400, detail="Invalid image format")
+        
+    unique_name = f"img_{uuid.uuid4().hex[:8]}_{file.filename}"
+    save_path = os.path.join(UPLOADS_IMAGES_DIR, unique_name)
+    
+    with open(save_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        
+    base_url = str(request.base_url).rstrip("/")
+    return {
+        "status": "success",
+        "url": f"{base_url}/static/uploads/images/{unique_name}"
+    }
+</code></pre>
+
+<div class="page-break"></div>
+
+<!-- CHAPTER 9 & 10 -->
+<h2 class="chapter-title">Chapter 9 & 10: Dashboard Analytics & Customer Leads</h2>
+
+<h3 class="section-title">9. Dashboard Live Metrics (GET /api/v1/analytics/dashboard)</h3>
+<p>
+  <strong>Frontend Section:</strong> <code>DashboardPage.jsx</code> ke top 4 statistics cards (Total Products, Categories, Views, Enquiries) aur Top 5 ranking tables.
+</p>
+<div class="callout">
+  <strong>Fast SQL Aggregation Queries:</strong> Hazaron records ko Python me loop chalane ke bajaye SQL database engine se direct calculate karwaya jata hai:
+  <br><code>db.query(func.coalesce(func.sum(models.Product.views), 0)).scalar()</code>
+</div>
+
+<h3 class="section-title">10. Customer Inquiries CRM Engine</h3>
+<p>
+  <strong>Frontend Section:</strong> <code>ContactPage.jsx</code> (Inquiry Form).
+</p>
+<ul>
+  <li><code>POST /api/v1/contact</code> ➔ Customer apna naam, phone, interest aur message submit karta hai.</li>
+  <li><code>GET /api/v1/contact/messages</code> ➔ Protected: Seller dashboard me saari leads latest-first order me display hoti hain.</li>
+  <li><code>PUT /api/v1/contact/messages/{id}/read</code> ➔ Seller lead ko "Contacted / Read" mark kar deta hai.</li>
+</ul>
+
+<div class="page-break"></div>
+
+<!-- CHAPTER 11 & 12 -->
+<h2 class="chapter-title">Chapter 11 & 12: Global Settings & Excel CSV Export</h2>
+
+<h3 class="section-title">11. Store & Company Settings (GET & PUT /api/v1/settings)</h3>
+<p>
+  <strong>Frontend Section:</strong> <code>FloatingWhatsApp.jsx</code>, <code>Footer.jsx</code>, <code>ContactPage.jsx</code>.
+</p>
+<p>
+  Pehle showroom ka WhatsApp number, address aur email JavaScript file me hardcoded tha. Ab database me <strong>Singleton Row (ID=1)</strong> banti hai:
+</p>
+<ul>
+  <li>Visitor aayega to <code>GET /api/v1/settings</code> se latest phone number fetch hoga.</li>
+  <li>Owner dashboard se <code>PUT /api/v1/settings</code> karke apna address ya phone number ek click me live update kar sakta hai bina coding badle!</li>
+</ul>
+
+<h3 class="section-title">12. Excel / CSV Data Export Engine (GET /api/v1/contact/export/csv)</h3>
+<p>
+  <strong>Frontend Section:</strong> Dashboard me <code>Export Leads to Excel</code> button.
+</p>
+
+<h3 class="section-title">Architecture: StreamingResponse with BOM</h3>
+<pre><code>import csv
+import io
+from fastapi.responses import StreamingResponse
+
+@app.get("/api/v1/contact/export/csv")
+def export_leads_csv(db: Session = Depends(get_db), current_user = Depends(auth.require_seller_or_admin)):
+    leads = db.query(models.ContactMessage).order_by(models.ContactMessage.id.desc()).all()
+    
+    # 1. Virtual in-memory string file (No disk write)
+    output = io.StringIO()
+    output.write('\ufeff') # UTF-8 BOM: Microsoft Excel compatibility fix
+    writer = csv.writer(output)
+    
+    # 2. Write CSV Header & Rows
+    writer.writerow(["ID", "Date", "Customer Name", "Phone", "Category", "Message"])
+    for l in leads:
+        writer.writerow([l.id, l.created_at, l.name, l.phone, l.category, l.message])
+        
+    filename = "oranza_leads.csv"
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+</code></pre>
+
+<div class="page-break"></div>
+
+<!-- CHAPTER 13 -->
+<h2 class="chapter-title">Chapter 13: Fresher Cheat Sheet & Common Errors</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Issue / Error</th>
+      <th>Why it happens?</th>
+      <th>How to Fix?</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>422 Unprocessable Entity</strong></td>
+      <td>Pydantic validation fail ho gaya (e.g. integer field me string bhej di, ya required field miss kar di).</td>
+      <td>Response body me <code>detail[0].loc</code> check karo aur required payload verify karo.</td>
+    </tr>
+    <tr>
+      <td><strong>401 Unauthorized</strong></td>
+      <td>Request ke header me <code>Authorization: Bearer &lt;token&gt;</code> nahi bheja ya token expire ho gaya.</td>
+      <td>Pehle <code>/auth/login</code> karke fresh token lo aur headers me pass karo.</td>
+    </tr>
+    <tr>
+      <td><strong>403 Forbidden</strong></td>
+      <td>User logged in hai lekin uske paas required role (e.g. admin) nahi hai.</td>
+      <td>Admin user account se login karo (<code>admin@oranza.com</code>).</td>
+    </tr>
+    <tr>
+      <td><strong>CORS Error in React</strong></td>
+      <td>Browser ne security ke liye port 3001 se port 8000 ki request block kar di.</td>
+      <td>FastAPI me <code>CORSMiddleware</code> lagao with <code>allow_origins=["*"]</code>.</td>
+    </tr>
+    <tr>
+      <td><strong>UnicodeEncodeError in Windows</strong></td>
+      <td>Windows terminal cp1252 use karta hai aur special symbol (jaise ₹ ya emoji) print karne par crash hota hai.</td>
+      <td>Console prints me emojis avoid karein ya UTF-8 safe encode/decode karein.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout-blue" style="margin-top: 30px; text-align: center;">
+  <strong>Congratulations! 🚀</strong><br>
+  Aapne ek complete, industry-standard, secure FastAPI backend build aur master kar liya hai.<br>
+  <em>Created for Ali-Eco-Cat / Oranza Digital Catalog System</em>
+</div>
+
+</body>
+</html>
