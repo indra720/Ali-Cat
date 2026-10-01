@@ -9,8 +9,11 @@ Ye functions database session (db) ka use karke actual SQL queries execute karte
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, func
 import re
+import csv
+import io
 import models
 import schemas
+
 
 def slugify(text: str) -> str:
     """Helper: Text ko URL friendly slug me convert karta hai (e.g. 'Office Chair' -> 'office-chair')"""
@@ -351,6 +354,90 @@ def update_store_settings(db: Session, update_data: schemas.SettingsUpdate):
     db.commit()
     db.refresh(settings)
     return settings
+
+
+# ===========================================================================
+# CSV EXPORT REPORTING CRUD
+# ===========================================================================
+
+def generate_leads_csv(db: Session) -> str:
+    """
+    Contact messages & customer inquiries ko Excel-ready CSV string me convert karta hai.
+    """
+    leads = db.query(models.ContactMessage).order_by(models.ContactMessage.id.desc()).all()
+    output = io.StringIO()
+    output.write('\ufeff')  # UTF-8 BOM for Microsoft Excel compatibility
+    writer = csv.writer(output)
+
+    # Header Row
+    writer.writerow([
+        "Lead ID",
+        "Submission Date (UTC)",
+        "Customer Name",
+        "Phone Number",
+        "Email Address",
+        "Category Interest",
+        "Message / Requirement",
+        "Status"
+    ])
+
+    for lead in leads:
+        writer.writerow([
+            lead.id,
+            lead.created_at.strftime("%Y-%m-%d %H:%M:%S") if lead.created_at else "",
+            lead.name,
+            lead.phone,
+            lead.email or "N/A",
+            lead.category or "General",
+            lead.message.replace("\n", " ") if lead.message else "",
+            "Read / Contacted" if lead.is_read else "New / Unread"
+        ])
+
+    return output.getvalue()
+
+
+def generate_products_csv(db: Session) -> str:
+    """
+    Catalog products inventory ko Excel-ready CSV string me convert karta hai.
+    """
+    products = db.query(models.Product).order_by(models.Product.id.asc()).all()
+    output = io.StringIO()
+    output.write('\ufeff')  # UTF-8 BOM for Microsoft Excel compatibility
+    writer = csv.writer(output)
+
+    # Header Row
+    writer.writerow([
+        "Product ID",
+        "SKU",
+        "Title",
+        "Category ID",
+        "Price Type",
+        "Price",
+        "Currency",
+        "Views Count",
+        "WhatsApp Enquiries",
+        "Has Video",
+        "Created Date"
+    ])
+
+    for prod in products:
+        has_video = "Yes" if (prod.video_url and prod.video_url.strip()) else "No"
+        writer.writerow([
+            prod.id,
+            prod.sku or "",
+            prod.title,
+            prod.category_id,
+            prod.price_type,
+            prod.price if prod.price is not None else "On Request",
+            prod.currency or "₹",
+            prod.views or 0,
+            prod.enquiries or 0,
+            has_video,
+            prod.created_at.strftime("%Y-%m-%d %H:%M:%S") if prod.created_at else ""
+        ])
+
+    return output.getvalue()
+
 
 
 

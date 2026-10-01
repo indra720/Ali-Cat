@@ -8,24 +8,17 @@ Ye file hamare backend ko SQL Database ke sath jodti hai.
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-# ---------------------------------------------------------------------------
-# 1. Database Connection URL
-# ---------------------------------------------------------------------------
-# SQLite me sara data ek local file "catalog.db" me save hota hai (zero-setup!).
-# Baad me jab PostgreSQL use karna hoga, bas is line ko change karna hoga:
-# SQLALCHEMY_DATABASE_URL = "postgresql://user:password@localhost/catalog_db"
+# SQLite local database file
 SQLALCHEMY_DATABASE_URL = "sqlite:///./catalog.db"
 
 # ---------------------------------------------------------------------------
-# 2. Create Database Engine
+# Create Database Engine
 # ---------------------------------------------------------------------------
-# Engine database ke sath actual socket/connection handle karta hai.
-# 'check_same_thread: False' sirf SQLite ke liye zaroori hai kyunki FastAPI
-# ek sath multiple threads me requests process karta hai.
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, 
     connect_args={"check_same_thread": False}
 )
+
 
 # ---------------------------------------------------------------------------
 # 3. SessionLocal Factory

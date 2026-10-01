@@ -2,10 +2,13 @@ import os
 import uuid
 import shutil
 from fastapi import FastAPI, Depends, HTTPException, status, Query, UploadFile, File, Request
+from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from typing import List, Optional
+from datetime import datetime
+
 
 # Local imports
 import models
@@ -469,6 +472,53 @@ def update_store_settings(
     Super Admin dashboard se store ki details (WhatsApp hotline, email, address, etc.) update karta hai.
     """
     return crud.update_store_settings(db, settings_data)
+
+
+# ---------------------------------------------------------------------------
+# 14. DATA EXPORT & REPORTING APIS (EXCEL / CSV DOWNLOAD)
+# ---------------------------------------------------------------------------
+
+@app.get("/api/v1/contact/export/csv", tags=["Export & Reporting"])
+def export_leads_csv(
+    db: Session = Depends(get_db),
+    current_user = Depends(auth.require_seller_or_admin)  # 🔒 Protected: Seller or Admin Only!
+):
+    """
+    Seller/Admin Dashboard ke liye:
+    Saari customer inquiries/leads ko Excel-ready CSV format me download karta hai.
+    """
+    csv_content = crud.generate_leads_csv(db)
+    filename = f"oranza_leads_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.csv"
+    
+    return StreamingResponse(
+        iter([csv_content]),
+        media_type="text/csv; charset=utf-8",
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}"
+        }
+    )
+
+
+@app.get("/api/v1/products/export/csv", tags=["Export & Reporting"])
+def export_products_csv(
+    db: Session = Depends(get_db),
+    current_user = Depends(auth.require_seller_or_admin)  # 🔒 Protected: Seller or Admin Only!
+):
+    """
+    Seller/Admin Dashboard ke liye:
+    Saare catalog products, SKUs, aur views/enquiries count ko CSV format me export karta hai.
+    """
+    csv_content = crud.generate_products_csv(db)
+    filename = f"oranza_catalog_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.csv"
+    
+    return StreamingResponse(
+        iter([csv_content]),
+        media_type="text/csv; charset=utf-8",
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}"
+        }
+    )
+
 
 
 
