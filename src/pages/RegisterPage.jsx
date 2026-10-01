@@ -12,8 +12,9 @@ import {
   Eye,
   EyeOff
 } from "lucide-react";
-import WhatsAppIcon from "../components/icons/WhatsAppIcon";
 import { useCatalog } from "../context/CatalogContext";
+import { authAPI } from "../services/api";
+import WhatsAppIcon from "../components/icons/WhatsAppIcon";
 
 export default function RegisterPage() {
   const [companyName, setCompanyName] = useState("");
@@ -21,14 +22,37 @@ export default function RegisterPage() {
   const [whatsapp, setWhatsapp] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const { login } = useCatalog();
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    login(email, password);
-    navigate("/dashboard");
+    setError("");
+    setLoading(true);
+    try {
+      await authAPI.register({
+        email: email.trim().toLowerCase(),
+        password,
+        full_name: companyName || "Seller Staff",
+        role: "seller",
+        phone: whatsapp.replace(/[^0-9]/g, "") || "+919876543210",
+        store_name: companyName || "My Store"
+      });
+      const res = await login(email, password);
+      if (res && res.success) {
+        navigate("/dashboard");
+      } else {
+        navigate("/login");
+      }
+    } catch (err) {
+      setError(err.message || "Registration failed. Email may already be registered.");
+    } finally {
+      setLoading(false);
+    }
   };
+
 
   return (
     <div className="pt-1 sm:pt-2 pb-8 sm:pb-10 bg-surface-secondary">
@@ -115,7 +139,14 @@ export default function RegisterPage() {
               </p>
             </div>
 
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-center gap-2">
+                <span>⚠️ {error}</span>
+              </div>
+            )}
+
             <form className="space-y-3.5" onSubmit={handleSubmit}>
+
               <div>
                 <label className="block text-xs font-semibold text-ink mb-1">
                   Company / Brand Name *

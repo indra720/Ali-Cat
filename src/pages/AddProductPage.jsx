@@ -14,8 +14,10 @@ import {
   Upload
 } from "lucide-react";
 import { useCatalog } from "../context/CatalogContext";
+import { uploadsAPI } from "../services/api";
 
 export default function AddProductPage() {
+
   const { categories, addProduct, company } = useCatalog();
   const navigate = useNavigate();
 
@@ -49,6 +51,9 @@ export default function AddProductPage() {
     { id: "4", key: "Warranty", value: "3 Years Manufacturer Warranty" },
   ]);
 
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [submittingProduct, setSubmittingProduct] = useState(false);
+
   const handleAddImage = () => {
     if (imageUrlInput.trim()) {
       setImages([...images, imageUrlInput.trim()]);
@@ -56,17 +61,27 @@ export default function AddProductPage() {
     }
   };
 
-  const handleFileUpload = (e) => {
+  const handleFileUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
 
-    files.forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = (uploadEvent) => {
-        setImages((prev) => [...prev, uploadEvent.target.result]);
-      };
-      reader.readAsDataURL(file);
-    });
+    setUploadingImage(true);
+    for (const file of files) {
+      try {
+        const res = await uploadsAPI.uploadImage(file);
+        if (res && res.url) {
+          setImages((prev) => [...prev, res.url]);
+        }
+      } catch (err) {
+        console.warn("Upload to backend failed, using local preview:", err.message);
+        const reader = new FileReader();
+        reader.onload = (uploadEvent) => {
+          setImages((prev) => [...prev, uploadEvent.target.result]);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+    setUploadingImage(false);
   };
 
   const handleRemoveImage = (indexToRemove) => {
@@ -90,8 +105,9 @@ export default function AddProductPage() {
     setSpecifications(specifications.filter((s) => s.id !== id));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmittingProduct(true);
 
     const selectedCat = categories.find((c) => c.id === categoryId);
 
@@ -118,9 +134,17 @@ export default function AddProductPage() {
       specifications: specifications.filter((s) => s.key.trim() && s.value.trim()),
     };
 
-    const created = addProduct(newProduct);
-    navigate(`/products/${created.slug}`);
+    try {
+      const created = await addProduct(newProduct);
+      navigate(`/products/${created.slug || created.id}`);
+    } catch (err) {
+      console.error(err);
+      navigate("/dashboard");
+    } finally {
+      setSubmittingProduct(false);
+    }
   };
+
 
   return (
     <div className="min-h-screen bg-surface-secondary py-10 sm:py-14">

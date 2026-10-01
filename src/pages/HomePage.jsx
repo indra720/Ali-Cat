@@ -19,7 +19,7 @@ import WhatsAppButton from "../components/WhatsAppButton";
 import WhatsAppIcon from "../components/icons/WhatsAppIcon";
 
 export default function HomePage() {
-  const { products, categories, company } = useCatalog();
+  const { products, categories, company, loadingProducts, loadingCategories } = useCatalog();
 
   const featuredProducts = products.filter((p) => p.isFeatured).slice(0, 4);
 
@@ -118,7 +118,11 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {categories.map((category) => (
+            {loadingCategories ? (
+              [1, 2, 3, 4].map((n) => (
+                <div key={n} className="h-64 rounded-2xl bg-gray-200 animate-pulse border border-gray-200/70"></div>
+              ))
+            ) : categories.map((category) => (
               <Link
                 key={category.id}
                 to={`/category/${category.slug}`}
@@ -186,9 +190,25 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
+            {loadingProducts ? (
+              [1, 2, 3, 4].map((n) => (
+                <div key={n} className="bg-white rounded-2xl h-80 animate-pulse border border-gray-200 p-4 flex flex-col justify-between shadow-sm">
+                  <div className="h-44 bg-gray-200 rounded-xl"></div>
+                  <div className="space-y-2 mt-4">
+                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-3 bg-gray-100 rounded w-1/2"></div>
+                  </div>
+                </div>
+              ))
+            ) : featuredProducts.length > 0 ? (
+              featuredProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))
+            ) : (
+              <div className="col-span-full py-8 text-center text-sm text-ink-secondary">
+                No featured products yet. Add products from the dashboard to display here!
+              </div>
+            )}
           </div>
         </div>
       </section>

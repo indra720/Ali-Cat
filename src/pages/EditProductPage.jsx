@@ -14,13 +14,36 @@ import {
   RotateCcw
 } from "lucide-react";
 import { useCatalog } from "../context/CatalogContext";
+import { uploadsAPI, productsAPI } from "../services/api";
 
 export default function EditProductPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { products, categories, updateProduct, company } = useCatalog();
+  const { products, categories, updateProduct, company, loadingProducts } = useCatalog();
 
-  const product = products.find((p) => p.id === id);
+  const [directProduct, setDirectProduct] = useState(null);
+  const [fetchingDirect, setFetchingDirect] = useState(false);
+
+  // Find product by slug or id
+  const catalogProduct = products.find((p) => String(p.id) === String(id) || p.slug === id);
+  const product = catalogProduct || directProduct;
+
+  useEffect(() => {
+    if (id && !catalogProduct) {
+      setFetchingDirect(true);
+      productsAPI.getById(id)
+        .then((data) => {
+          if (data) setDirectProduct(data);
+        })
+        .catch((err) => {
+          console.warn("Direct fetch error in EditProductPage:", err);
+        })
+        .finally(() => {
+          setFetchingDirect(false);
+        });
+    }
+  }, [id, catalogProduct]);
+
 
   // Form State
   const [title, setTitle] = useState("");
@@ -65,6 +88,17 @@ export default function EditProductPage() {
     }
   }, [product, categories, company]);
 
+  if (loadingProducts || (fetchingDirect && !product)) {
+    return (
+      <div className="min-h-screen bg-surface-secondary flex items-center justify-center p-4">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-oranza-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-sm font-medium text-ink-secondary">Loading product for editing...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!product) {
     return (
       <div className="min-h-screen bg-surface-secondary flex items-center justify-center p-4">
@@ -94,17 +128,30 @@ export default function EditProductPage() {
   };
 
   // Handle Local Computer Image File Upload
-  const handleFileUpload = (e) => {
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [submittingProduct, setSubmittingProduct] = useState(false);
+
+  const handleFileUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
 
-    files.forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = (uploadEvent) => {
-        setImages((prev) => [...prev, uploadEvent.target.result]);
-      };
-      reader.readAsDataURL(file);
-    });
+    setUploadingImage(true);
+    for (const file of files) {
+      try {
+        const res = await uploadsAPI.uploadImage(file);
+        if (res && res.url) {
+          setImages((prev) => [...prev, res.url]);
+        }
+      } catch (err) {
+        console.warn("Upload to backend failed, using local preview:", err.message);
+        const reader = new FileReader();
+        reader.onload = (uploadEvent) => {
+          setImages((prev) => [...prev, uploadEvent.target.result]);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+    setUploadingImage(false);
   };
 
   const handleRemoveImage = (idxToRemove) => {
@@ -129,8 +176,9 @@ export default function EditProductPage() {
     setSpecifications(specifications.filter((s) => s.id !== id));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmittingProduct(true);
 
     const selectedCat = categories.find((c) => c.id === categoryId);
 
@@ -154,9 +202,17 @@ export default function EditProductPage() {
       specifications: specifications.filter((s) => s.key.trim() && s.value.trim()),
     };
 
-    updateProduct(product.id, updatedFields);
-    navigate(`/products/${product.slug}`);
+    try {
+      await updateProduct(product.id, updatedFields);
+      navigate(`/dashboard`);
+    } catch (err) {
+      console.error(err);
+      navigate(`/dashboard`);
+    } finally {
+      setSubmittingProduct(false);
+    }
   };
+
 
   return (
     <div className="min-h-screen bg-surface-secondary py-10 sm:py-14">

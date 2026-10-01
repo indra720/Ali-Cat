@@ -14,7 +14,7 @@ import WhatsAppButton from "../components/WhatsAppButton";
 import WhatsAppIcon from "../components/icons/WhatsAppIcon";
 
 export default function CategoriesPage() {
-  const { categories, products, company } = useCatalog();
+  const { categories, products, company, loadingCategories } = useCatalog();
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredCategories = categories.filter((cat) => {
@@ -69,7 +69,17 @@ export default function CategoriesPage() {
 
         {/* Categories Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {filteredCategories.map((category) => {
+          {loadingCategories ? (
+            [1, 2, 3, 4].map((n) => (
+              <div key={n} className="bg-white rounded-3xl border border-gray-200 h-96 animate-pulse p-4 flex flex-col justify-between shadow-sm">
+                <div className="h-56 bg-gray-200 rounded-2xl"></div>
+                <div className="space-y-2 mt-4">
+                  <div className="h-5 bg-gray-200 rounded w-2/3"></div>
+                  <div className="h-4 bg-gray-100 rounded w-full"></div>
+                </div>
+              </div>
+            ))
+          ) : filteredCategories.map((category) => {
             // Find products belonging to this category
             const categoryProducts = products.filter(
               (p) => p.categoryId === category.id

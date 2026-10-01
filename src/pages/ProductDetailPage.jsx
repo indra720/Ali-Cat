@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { 
   ArrowLeft, 
@@ -18,6 +18,7 @@ import {
   Printer
 } from "lucide-react";
 import { useCatalog } from "../context/CatalogContext";
+import { productsAPI } from "../services/api";
 import VideoPlayer from "../components/VideoPlayer";
 import WhatsAppButton from "../components/WhatsAppButton";
 import WhatsAppIcon from "../components/icons/WhatsAppIcon";
@@ -27,16 +28,48 @@ import QRCodeModal from "../components/QRCodeModal";
 export default function ProductDetailPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { products, company } = useCatalog();
+  const { products, company, loadingProducts } = useCatalog();
+
+  const [directProduct, setDirectProduct] = useState(null);
+  const [fetchingDirect, setFetchingDirect] = useState(false);
 
   // Find product by slug or id
-  const product = products.find((p) => p.slug === slug || p.id === slug);
+  const catalogProduct = products.find((p) => p.slug === slug || String(p.id) === String(slug));
+  const product = catalogProduct || directProduct;
+
+  // Automatically record view count on backend and fetch directly from DB:
+  useEffect(() => {
+    if (slug) {
+      setFetchingDirect(true);
+      productsAPI.getById(slug)
+        .then((data) => {
+          if (data) setDirectProduct(data);
+        })
+        .catch((err) => {
+          console.warn("Could not fetch product detail directly:", err.message);
+        })
+        .finally(() => {
+          setFetchingDirect(false);
+        });
+    }
+  }, [slug]);
 
   // Active media view: index of image or "video"
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [activeMediaTab, setActiveMediaTab] = useState("gallery"); // "gallery" or "video"
   const [copiedLink, setCopiedLink] = useState(false);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+
+  if (loadingProducts || (fetchingDirect && !product)) {
+    return (
+      <div className="min-h-screen bg-surface-secondary flex items-center justify-center p-4">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-oranza-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-sm font-medium text-ink-secondary">Loading live product details from database...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!product) {
     return (

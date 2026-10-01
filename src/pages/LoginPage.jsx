@@ -17,23 +17,42 @@ import WhatsAppIcon from "../components/icons/WhatsAppIcon";
 import { useCatalog } from "../context/CatalogContext";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("seller@oranzalifestyle.com");
-  const [password, setPassword] = useState("seller123");
+  const [email, setEmail] = useState("admin@oranza.com");
+  const [password, setPassword] = useState("adminpassword123");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const { login } = useCatalog();
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    login(email, password);
-    navigate("/dashboard");
+    setErrorMessage("");
+    setLoading(true);
+    const res = await login(email, password);
+    setLoading(false);
+    if (res && res.success) {
+      navigate("/dashboard");
+    } else {
+      setErrorMessage(res?.error || "Invalid email or password. Please try again.");
+    }
   };
 
-  const handleQuickDemoLogin = () => {
-    login("admin@oranza.com", "admin123");
-    navigate("/dashboard");
+  const handleQuickDemoLogin = async () => {
+    setErrorMessage("");
+    setLoading(true);
+    setEmail("admin@oranza.com");
+    setPassword("adminpassword123");
+    const res = await login("admin@oranza.com", "adminpassword123");
+    setLoading(false);
+    if (res && res.success) {
+      navigate("/dashboard");
+    } else {
+      setErrorMessage(res?.error || "Demo login failed.");
+    }
   };
+
 
   return (
     <div className="pt-1 sm:pt-2 pb-8 sm:pb-10 bg-surface-secondary">
@@ -127,7 +146,14 @@ export default function LoginPage() {
               </p>
             </div>
 
+            {errorMessage && (
+              <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-center gap-2">
+                <span>⚠️ {errorMessage}</span>
+              </div>
+            )}
+
             <form className="space-y-4" onSubmit={handleSubmit}>
+
               <div>
                 <label className="block text-xs font-semibold text-ink mb-1.5">
                   Company Email Address

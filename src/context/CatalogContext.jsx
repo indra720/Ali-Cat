@@ -1,66 +1,118 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { initialProducts, initialCategories, companyConfig } from "../data/catalogData";
+import {
+  productsAPI,
+  categoriesAPI,
+  authAPI,
+  settingsAPI,
+  enquiriesAPI
+} from "../services/api";
+
+const defaultCompanyConfig = {
+  name: "Oranza Living & Lifestyle",
+  tagline: "Inspiring Spaces with Curated Design",
+  defaultWhatsApp: "919876543210",
+  phoneDisplay: "+91 98765 43210",
+  email: "catalog@oranzalifestyle.com",
+  address: "Plot 42, Design District, Outer Ring Road, Bengaluru, India",
+  instagram: "https://instagram.com",
+  catalogCountText: "500+ Curated Products"
+};
 
 const CatalogContext = createContext();
 
 export function CatalogProvider({ children }) {
-  // Load products from localStorage or use initial demo
-  const [products, setProducts] = useState(() => {
-    try {
-      const saved = localStorage.getItem("oranza_catalog_products");
-      return saved ? JSON.parse(saved) : initialProducts;
-    } catch {
-      return initialProducts;
-    }
-  });
+  // 1. Live Products state - 100% DYNAMIC from FastAPI SQLite DB
+  const [products, setProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
 
-  // Load categories from localStorage or use initial demo
-  const [categories, setCategories] = useState(() => {
-    try {
-      const saved = localStorage.getItem("oranza_catalog_categories");
-      return saved ? JSON.parse(saved) : initialCategories;
-    } catch {
-      return initialCategories;
-    }
-  });
+  // 2. Live Categories state - 100% DYNAMIC from FastAPI SQLite DB
+  const [categories, setCategories] = useState([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
 
-  // Authentication state for Seller / Company Admin
+  // 3. Live Company Settings state - DYNAMIC from FastAPI SQLite DB
+  const [company, setCompany] = useState(defaultCompanyConfig);
+  const [loadingCompany, setLoadingCompany] = useState(true);
+
+  // 4. Authentication state with JWT
   const [auth, setAuth] = useState(() => {
     try {
       const saved = localStorage.getItem("oranza_catalog_auth");
-      return saved ? JSON.parse(saved) : { isLoggedIn: false, user: null };
+      return saved ? JSON.parse(saved) : { isLoggedIn: false, user: null, token: null };
     } catch {
-      return { isLoggedIn: false, user: null };
+      return { isLoggedIn: false, user: null, token: null };
     }
   });
 
-  // Track global enquiry counts
-  const [enquiryStats, setEnquiryStats] = useState(() => {
-    try {
-      const saved = localStorage.getItem("oranza_catalog_stats");
-      return saved ? JSON.parse(saved) : { totalClicks: 142 };
-    } catch {
-      return { totalClicks: 142 };
-    }
-  });
+  // 5. Global Enquiry Stats
+  const [enquiryStats, setEnquiryStats] = useState({ totalClicks: 0 });
 
-  // Save changes to localStorage
+  // ---------------------------------------------------------------------------
+  // INITIAL DYNAMIC FETCH FROM FASTAPI BACKEND (on page load)
+  // ---------------------------------------------------------------------------
   useEffect(() => {
-    try {
-      localStorage.setItem("oranza_catalog_products", JSON.stringify(products));
-    } catch (e) {
-      console.error("Failed to save products to localStorage", e);
+    // 1. Fetch live products from FastAPI
+    async function loadProducts() {
+      try {
+        setLoadingProducts(true);
+        const liveProducts = await productsAPI.getAll();
+        setProducts(Array.isArray(liveProducts) ? liveProducts : []);
+      } catch (err) {
+        console.error("Could not fetch live products from backend:", err.message);
+        setProducts([]);
+      } finally {
+        setLoadingProducts(false);
+      }
     }
-  }, [products]);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem("oranza_catalog_categories", JSON.stringify(categories));
-    } catch (e) {
-      console.error("Failed to save categories to localStorage", e);
+    // 2. Fetch live categories from FastAPI
+    async function loadCategories() {
+      try {
+        setLoadingCategories(true);
+        const liveCategories = await categoriesAPI.getAll();
+        setCategories(Array.isArray(liveCategories) ? liveCategories : []);
+      } catch (err) {
+        console.error("Could not fetch live categories from backend:", err.message);
+        setCategories([]);
+      } finally {
+        setLoadingCategories(false);
+      }
     }
-  }, [categories]);
 
+    // 3. Fetch live store settings from FastAPI
+    async function loadSettings() {
+      try {
+        const liveSettings = await settingsAPI.get();
+        if (liveSettings) {
+          setCompany(liveSettings);
+        }
+      } catch (err) {
+        console.error("Could not fetch store settings:", err.message);
+      } finally {
+        setLoadingCompany(false);
+      }
+    }
+
+    // 4. Verify existing JWT token with /auth/me
+    async function verifyAuth() {
+      const token = localStorage.getItem("oranza_jwt_token");
+      if (token) {
+        try {
+          const user = await authAPI.getMe();
+          setAuth({ isLoggedIn: true, user, token });
+        } catch {
+          localStorage.removeItem("oranza_jwt_token");
+          setAuth({ isLoggedIn: false, user: null, token: null });
+        }
+      }
+    }
+
+    loadProducts();
+    loadCategories();
+    loadSettings();
+    verifyAuth();
+  }, []);
+
+  // Save auth to localStorage
   useEffect(() => {
     try {
       localStorage.setItem("oranza_catalog_auth", JSON.stringify(auth));
@@ -69,52 +121,38 @@ export function CatalogProvider({ children }) {
     }
   }, [auth]);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem("oranza_catalog_stats", JSON.stringify(enquiryStats));
-    } catch (e) {
-      console.error("Failed to save stats to localStorage", e);
-    }
-  }, [enquiryStats]);
+  // ---------------------------------------------------------------------------
+  // LIVE ASYNC ACTIONS (Connected to FastAPI Endpoints)
+  // ---------------------------------------------------------------------------
 
-  // Actions
-  const addProduct = (newProduct) => {
-    const slug = newProduct.title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "");
-
-    const product = {
-      ...newProduct,
-      id: "prod-" + Date.now(),
-      slug: slug || "product-" + Date.now(),
-      views: 1,
-      enquiries: 0,
-      createdAt: new Date().toISOString().split("T")[0],
-    };
-
-    setProducts((prev) => [product, ...prev]);
-
+  // Add Product (POST /api/v1/products)
+  const addProduct = async (newProduct) => {
+    const created = await productsAPI.create(newProduct);
+    setProducts((prev) => [created, ...prev]);
+    
     // Update category productCount
-    if (product.categoryId) {
+    if (created.categoryId) {
       setCategories((prev) =>
         prev.map((cat) =>
-          cat.id === product.categoryId
+          cat.id === created.categoryId
             ? { ...cat, productCount: (cat.productCount || 0) + 1 }
             : cat
         )
       );
     }
-    return product;
+    return created;
   };
 
-  const updateProduct = (id, updatedFields) => {
-    setProducts((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, ...updatedFields } : p))
-    );
+  // Update Product (PUT /api/v1/products/{id})
+  const updateProduct = async (id, updatedFields) => {
+    const updated = await productsAPI.update(id, updatedFields);
+    setProducts((prev) => prev.map((p) => (p.id === id ? updated : p)));
+    return updated;
   };
 
-  const deleteProduct = (id) => {
+  // Delete Product (DELETE /api/v1/products/{id})
+  const deleteProduct = async (id) => {
+    await productsAPI.delete(id);
     const target = products.find((p) => p.id === id);
     setProducts((prev) => prev.filter((p) => p.id !== id));
 
@@ -129,27 +167,21 @@ export function CatalogProvider({ children }) {
     }
   };
 
-  const addCategory = (catData) => {
-    const slug = catData.name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "");
-
-    const newCat = {
-      ...catData,
-      id: "cat-" + Date.now(),
-      slug,
-      productCount: 0,
-    };
-    setCategories((prev) => [...prev, newCat]);
-    return newCat;
+  // Add Category (POST /api/v1/categories)
+  const addCategory = async (catData) => {
+    const created = await categoriesAPI.create(catData);
+    setCategories((prev) => [...prev, created]);
+    return created;
   };
 
-  const deleteCategory = (id) => {
+  // Delete Category (DELETE /api/v1/categories/{id})
+  const deleteCategory = async (id) => {
+    await categoriesAPI.delete(id);
     setCategories((prev) => prev.filter((c) => c.id !== id));
   };
 
-  const recordEnquiry = (productId) => {
+  // Record WhatsApp Enquiry Click (POST /api/v1/enquiries/click)
+  const recordEnquiry = async (productId) => {
     setEnquiryStats((prev) => ({
       ...prev,
       totalClicks: prev.totalClicks + 1,
@@ -162,39 +194,68 @@ export function CatalogProvider({ children }) {
         )
       );
     }
+
+    try {
+      const numId = typeof productId === "number" || (!isNaN(productId) && productId !== null) ? Number(productId) : null;
+      await enquiriesAPI.recordClick(numId);
+    } catch (err) {
+      console.warn("Backend enquiry record failed (offline):", err.message);
+    }
   };
 
-  const login = (email, password) => {
-    // Simple demo auth
-    const user = {
-      name: email.split("@")[0] || "Seller Admin",
-      email,
-      company: companyConfig.name,
-      role: "Seller Admin",
-    };
-    setAuth({ isLoggedIn: true, user });
-    return true;
+  // Real Login with JWT (POST /api/v1/auth/login)
+  const login = async (email, password) => {
+    const data = await authAPI.login(email, password);
+    if (data && data.access_token) {
+      localStorage.setItem("oranza_jwt_token", data.access_token);
+      setAuth({
+        isLoggedIn: true,
+        user: data.user,
+        token: data.access_token
+      });
+      return { success: true, user: data.user };
+    }
+    return { success: false, error: "Invalid credentials" };
   };
 
+  // Logout
   const logout = () => {
-    setAuth({ isLoggedIn: false, user: null });
+    localStorage.removeItem("oranza_jwt_token");
+    setAuth({ isLoggedIn: false, user: null, token: null });
   };
 
-  const resetToDemoData = () => {
-    setProducts(initialProducts);
-    setCategories(initialCategories);
-    localStorage.removeItem("oranza_catalog_products");
-    localStorage.removeItem("oranza_catalog_categories");
+  // Refresh data from backend
+  const refreshData = async () => {
+    try {
+      setLoadingProducts(true);
+      setLoadingCategories(true);
+      const [liveProducts, liveCategories, liveSettings] = await Promise.all([
+        productsAPI.getAll(),
+        categoriesAPI.getAll(),
+        settingsAPI.get()
+      ]);
+      if (liveProducts) setProducts(liveProducts);
+      if (liveCategories) setCategories(liveCategories);
+      if (liveSettings) setCompany(liveSettings);
+    } catch (e) {
+      console.error("Refresh failed:", e);
+    } finally {
+      setLoadingProducts(false);
+      setLoadingCategories(false);
+    }
   };
 
   return (
     <CatalogContext.Provider
       value={{
         products,
+        loadingProducts,
         categories,
+        loadingCategories,
         auth,
         enquiryStats,
-        company: companyConfig,
+        company,
+        loadingCompany,
         addProduct,
         updateProduct,
         deleteProduct,
@@ -203,7 +264,7 @@ export function CatalogProvider({ children }) {
         recordEnquiry,
         login,
         logout,
-        resetToDemoData,
+        refreshData
       }}
     >
       {children}

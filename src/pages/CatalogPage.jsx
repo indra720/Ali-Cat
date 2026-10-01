@@ -15,7 +15,7 @@ import { useCatalog } from "../context/CatalogContext";
 import ProductCard from "../components/ProductCard";
 
 export default function CatalogPage() {
-  const { products, categories } = useCatalog();
+  const { products, categories, loadingProducts } = useCatalog();
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Filters state
@@ -225,7 +225,19 @@ export default function CatalogPage() {
         )}
 
         {/* Product Grid */}
-        {filteredProducts.length > 0 ? (
+        {loadingProducts ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+              <div key={n} className="bg-white rounded-2xl h-80 animate-pulse border border-gray-200 p-4 flex flex-col justify-between shadow-sm">
+                <div className="h-44 bg-gray-200 rounded-xl"></div>
+                <div className="space-y-2 mt-4">
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-3 bg-gray-100 rounded w-1/2"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filteredProducts.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
             {filteredProducts.map((product) => (
               <ProductCard key={product.id} product={product} />

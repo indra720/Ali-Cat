@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useCatalog } from "../context/CatalogContext";
 import WhatsAppIcon from "../components/icons/WhatsAppIcon";
+import { contactAPI } from "../services/api";
 
 export default function ContactPage() {
   const { company, categories, recordEnquiry } = useCatalog();
@@ -28,22 +29,34 @@ export default function ContactPage() {
   });
 
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    recordEnquiry(null);
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        category: "General Inquiry",
-        message: "",
-      });
-    }, 5000);
+    setSubmitting(true);
+    setSubmitError("");
+    try {
+      await contactAPI.submit(formData);
+      recordEnquiry(null);
+      setSubmitted(true);
+      setTimeout(() => {
+        setSubmitted(false);
+        setFormData({
+          name: "",
+          email: "",
+          phone: "",
+          category: "General Inquiry",
+          message: "",
+        });
+      }, 5000);
+    } catch (err) {
+      setSubmitError(err.message || "Failed to submit enquiry. Please try WhatsApp.");
+    } finally {
+      setSubmitting(false);
+    }
   };
+
 
   const handleWhatsAppSend = () => {
     recordEnquiry(null);
