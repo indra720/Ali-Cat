@@ -7,8 +7,8 @@
  * isi single file me handle hoti hai.
  */
 
-export const API_BASE_URL = "http://127.0.0.1:8000/api/v1";
-export const BACKEND_URL = "http://127.0.0.1:8000";
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000/api/v1";
+export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
 
 // Helper: Common headers with optional JWT authentication token
 function getHeaders(isMultipart = false) {
@@ -130,6 +130,23 @@ export const authAPI = {
       headers: getHeaders()
     });
     return handleResponse(res);
+  },
+
+  async updateProfile(profileData) {
+    const res = await fetch(`${API_BASE_URL}/auth/me`, {
+      method: "PUT",
+      headers: getHeaders(),
+      body: JSON.stringify(profileData)
+    });
+    return handleResponse(res);
+  },
+
+  async deleteAccount() {
+    const res = await fetch(`${API_BASE_URL}/auth/me`, {
+      method: "DELETE",
+      headers: getHeaders()
+    });
+    return handleResponse(res);
   }
 };
 
@@ -247,6 +264,25 @@ export const categoriesAPI = {
     };
     const res = await fetch(`${API_BASE_URL}/categories`, {
       method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify(payload)
+    });
+    const data = await handleResponse(res);
+    return normalizeCategory(data);
+  },
+
+  async update(categoryId, catData) {
+    const payload = {};
+    if (catData.name !== undefined) payload.name = catData.name;
+    if (catData.description !== undefined) payload.description = catData.description;
+    if (catData.icon !== undefined) payload.icon = catData.icon;
+    if (catData.image !== undefined || catData.hero_image !== undefined) {
+      payload.hero_image = catData.image || catData.hero_image;
+    }
+    if (catData.is_featured !== undefined) payload.is_featured = catData.is_featured;
+
+    const res = await fetch(`${API_BASE_URL}/categories/${categoryId}`, {
+      method: "PUT",
       headers: getHeaders(),
       body: JSON.stringify(payload)
     });

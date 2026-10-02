@@ -105,30 +105,7 @@ def seed_initial_data():
             )
             db.add_all([furniture, electronics])
             db.commit()
-
-            # Seed demo product
-            p1 = models.Product(
-                title="Apex Executive Ergonomic Chair",
-                slug="apex-executive-ergonomic-chair",
-                sku="APEX-CH-001",
-                category_id="furniture",
-                price=18500.0,
-                price_type="fixed",
-                currency="₹",
-                short_description="High-back mesh ergonomic office chair with 3D lumbar support.",
-                full_description="Designed for 12+ hours continuous usage with breathable Korean mesh.",
-                whatsapp_number="+919876543210",
-                is_featured=True,
-                images=[
-                    "https://images.unsplash.com/photo-1505797149-43b0069ec26b?auto=format&fit=crop&w=800&q=80"
-                ],
-                specifications=[
-                    {"key": "Material", "value": "Reinforced Aluminum & Breathable Mesh"}
-                ]
-            )
-            db.add(p1)
-            db.commit()
-            print("[INFO] Initial demo catalog data seeded successfully!")
+            print("[INFO] Initial demo categories seeded successfully!")
     finally:
         db.close()
 
@@ -208,6 +185,30 @@ def get_my_profile(current_user: models.User = Depends(auth.get_current_user)):
     """
     return current_user
 
+@app.put("/api/v1/auth/me", response_model=schemas.UserResponse, tags=["Authentication"])
+def update_my_profile(
+    user_data: schemas.UserUpdate,
+    current_user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Protected Endpoint: Logged-in user apni details (name, phone, store_name, password) update kar sakta hai
+    """
+    return crud.update_user(db, current_user, user_data)
+
+@app.delete("/api/v1/auth/me", tags=["Authentication"])
+def delete_my_account(
+    current_user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Protected Endpoint: Logged-in user apna account permanently delete kar sakta hai
+    """
+    crud.delete_user(db, current_user)
+    return {"message": "Account successfully deleted from database"}
+
+
+
 
 # ---------------------------------------------------------------------------
 # 7. CATEGORIES API ENDPOINTS
@@ -229,21 +230,34 @@ def list_categories(skip: int = 0, limit: int = 50, db: Session = Depends(get_db
 def create_category(
     category: schemas.CategoryCreate,
     db: Session = Depends(get_db),
-    current_admin = Depends(auth.require_admin)  # 🔒 Protected: Super Admin Only
+    current_user = Depends(auth.require_seller_or_admin)  # 🔒 Protected: Seller or Admin
 ):
-    """Admin Only: Nayi category create karta hai"""
+    """Seller/Admin: Nayi category create karta hai"""
     existing = crud.get_category_by_id(db, category.id)
     if existing:
         raise HTTPException(status_code=400, detail=f"Category '{category.id}' already exists!")
     return crud.create_category(db, category)
 
+@app.put("/api/v1/categories/{category_id}", response_model=schemas.CategoryResponse, tags=["Categories"])
+def update_category(
+    category_id: str,
+    category_update: schemas.CategoryUpdate,
+    db: Session = Depends(get_db),
+    current_user = Depends(auth.require_seller_or_admin)  # 🔒 Protected: Seller or Admin
+):
+    """Seller/Admin: Category update karta hai"""
+    updated = crud.update_category(db, category_id, category_update)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Category not found")
+    return updated
+
 @app.delete("/api/v1/categories/{category_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["Categories"])
 def delete_category(
     category_id: str,
     db: Session = Depends(get_db),
-    current_admin = Depends(auth.require_admin)  # 🔒 Protected: Super Admin Only
+    current_user = Depends(auth.require_seller_or_admin)  # 🔒 Protected: Seller or Admin
 ):
-    """Admin Only: Category delete karta hai"""
+    """Seller/Admin: Category delete karta hai"""
     success = crud.delete_category(db, category_id)
     if not success:
         raise HTTPException(status_code=404, detail="Category not found")

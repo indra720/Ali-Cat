@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { BookOpen, Layers, PhoneCall, LayoutDashboard, Menu, X, ArrowRight, Sparkles } from "lucide-react";
+import { BookOpen, Layers, PhoneCall, LayoutDashboard, Menu, X, ArrowRight, Sparkles, User } from "lucide-react";
 import WhatsAppIcon from "./icons/WhatsAppIcon";
 import { useCatalog } from "../context/CatalogContext";
 
@@ -67,8 +67,8 @@ export default function Navbar() {
             </div>
           </Link>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-1 lg:gap-2">
+          {/* Desktop Navigation Links (Visible on xl+ screens) */}
+          <nav className="hidden xl:flex items-center gap-1 lg:gap-2">
             {navLinks.map((link) => (
               <Link
                 key={link.name}
@@ -84,50 +84,60 @@ export default function Navbar() {
             ))}
           </nav>
 
-          {/* Right Action Buttons */}
-          <div className="hidden sm:flex items-center gap-3">
+          {/* Right Action Buttons & Toggle Menu */}
+          <div className="flex items-center gap-2 sm:gap-3">
             <Link
               to="/catalog"
-              className="px-4 py-2 text-sm font-medium text-ink-secondary hover:text-oranza-600 border border-gray-200 rounded-brand hover:border-oranza-300 transition-colors"
+              className="hidden 2xl:inline-flex px-4 py-2 text-sm font-medium text-ink-secondary hover:text-oranza-600 border border-gray-200 rounded-brand hover:border-oranza-300 transition-colors"
             >
               Browse Products
             </Link>
 
             {auth.isLoggedIn ? (
-              <Link
-                to="/dashboard"
-                className="px-4 py-2 text-sm font-semibold text-white bg-oranza-500 hover:bg-oranza-600 rounded-brand shadow-sm flex items-center gap-1.5 transition-all"
-              >
-                <LayoutDashboard className="w-4 h-4" />
-                <span>Seller Dashboard</span>
-              </Link>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <Link
+                  to="/profile"
+                  className="px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-ink-secondary hover:text-ink bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-brand flex items-center gap-1.5 transition-colors"
+                  title="My Profile & Settings"
+                >
+                  <User className="w-4 h-4 text-oranza-600" />
+                  <span className="hidden sm:inline">{auth.user?.full_name?.split(" ")[0] || "Profile"}</span>
+                </Link>
+                <Link
+                  to="/dashboard"
+                  className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white bg-oranza-500 hover:bg-oranza-600 rounded-brand shadow-sm flex items-center gap-1.5 transition-all"
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span className="hidden sm:inline">Dashboard</span>
+                </Link>
+              </div>
             ) : (
               <Link
                 to="/login"
-                className="px-4 py-2 text-sm font-semibold text-white bg-oranza-500 hover:bg-oranza-600 rounded-brand shadow-sm flex items-center gap-1.5 transition-all"
+                className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white bg-oranza-500 hover:bg-oranza-600 rounded-brand shadow-sm flex items-center gap-1.5 transition-all"
               >
                 <LayoutDashboard className="w-4 h-4" />
                 <span>Seller Portal</span>
               </Link>
             )}
-          </div>
 
-          {/* Mobile menu button */}
-          <div className="flex md:hidden items-center gap-2">
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg text-ink-secondary hover:text-ink hover:bg-gray-100"
-              aria-label="Toggle menu"
-            >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
+            {/* Mobile & Tablet Hamburger Toggle Button */}
+            <div className="flex xl:hidden items-center ml-1">
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="p-2 rounded-xl text-ink-secondary hover:text-ink hover:bg-gray-100 border border-gray-200 transition-colors"
+                aria-label="Toggle menu"
+              >
+                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Mobile Drawer */}
+      {/* Mobile & Tablet Drawer (Active on < xl screens) */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-gray-100 bg-white px-4 pt-3 pb-6 space-y-2 shadow-lg animate-in slide-in-from-top">
+        <div className="xl:hidden border-t border-gray-100 bg-white px-4 pt-3 pb-6 space-y-2 shadow-lg animate-in slide-in-from-top">
           {navLinks.map((link) => (
             <Link
               key={link.name}
@@ -146,6 +156,16 @@ export default function Navbar() {
             >
               Explore Full Catalog
             </Link>
+            {auth.isLoggedIn && (
+              <Link
+                to="/profile"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full text-center py-2.5 bg-gray-100 hover:bg-gray-200 text-ink rounded-brand text-sm font-semibold flex items-center justify-center gap-2"
+              >
+                <User className="w-4 h-4 text-oranza-600" />
+                <span>My Profile ({auth.user?.full_name?.split(" ")[0] || "Seller"})</span>
+              </Link>
+            )}
             <Link
               to={auth.isLoggedIn ? "/dashboard" : "/login"}
               onClick={() => setMobileMenuOpen(false)}

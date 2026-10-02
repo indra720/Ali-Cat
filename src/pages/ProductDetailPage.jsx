@@ -91,9 +91,7 @@ export default function ProductDetailPage() {
     );
   }
 
-  const images = product.images && product.images.length > 0 ? product.images : [
-    "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=1200&q=80"
-  ];
+  const images = product.images && product.images.length > 0 ? product.images : [];
 
   const displayPrice =
     product.priceType === "on_request" || !product.price
@@ -213,16 +211,24 @@ export default function ProductDetailPage() {
               {activeMediaTab === "gallery" ? (
                 <div className="space-y-3">
                   <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-gray-100 border border-gray-200/80">
-                    <img
-                      src={images[selectedImageIndex] || images[0]}
-                      alt={product.title}
-                      className="w-full h-full object-cover object-center transition-all duration-300"
-                    />
-
-                    {/* Image Counter Badge */}
-                    <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-sm text-white text-xs font-medium">
-                      {selectedImageIndex + 1} / {images.length}
-                    </div>
+                    {images.length > 0 ? (
+                      <>
+                        <img
+                          src={images[selectedImageIndex] || images[0]}
+                          alt={product.title}
+                          className="w-full h-full object-cover object-center transition-all duration-300"
+                        />
+                        {/* Image Counter Badge */}
+                        <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-sm text-white text-xs font-medium">
+                          {selectedImageIndex + 1} / {images.length}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 text-gray-400">
+                        <ImageIcon className="w-12 h-12 mb-2 text-gray-300" />
+                        <span className="text-sm font-semibold">No Image Uploaded</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Thumbnail Row */}

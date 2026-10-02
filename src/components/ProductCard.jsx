@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Play, ArrowRight, MessageCircle, Sparkles } from "lucide-react";
+import { Play, ArrowRight, MessageCircle, Sparkles, Package } from "lucide-react";
 import WhatsAppButton from "./WhatsAppButton";
 
 export default function ProductCard({ product }) {
@@ -14,7 +14,7 @@ export default function ProductCard({ product }) {
   const primaryImage =
     product.images && product.images.length > 0
       ? product.images[0]
-      : "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=600&q=80";
+      : null;
 
   return (
     <div className="group bg-white rounded-card border border-gray-200/80 hover:border-oranza-300 shadow-card hover:shadow-card-hover transition-all duration-300 flex flex-col overflow-hidden">
@@ -23,12 +23,19 @@ export default function ProductCard({ product }) {
         to={`/products/${product.slug}`}
         className="relative block aspect-[4/3] bg-gray-100 overflow-hidden"
       >
-        <img
-          src={primaryImage}
-          alt={product.title}
-          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
-          loading="lazy"
-        />
+        {primaryImage ? (
+          <img
+            src={primaryImage}
+            alt={product.title}
+            className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 text-gray-400">
+            <Package className="w-12 h-12 text-gray-300 mb-1" />
+            <span className="text-xs font-semibold text-gray-400">No Image</span>
+          </div>
+        )}
 
         {/* Category Badge */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5 items-start">

@@ -62,6 +62,31 @@ def authenticate_user(db: Session, email: str, password: str):
         return None
     return user
 
+def update_user(db: Session, db_user: models.User, user_update: schemas.UserUpdate):
+    """User profile details update karta hai"""
+    if user_update.full_name is not None and user_update.full_name.strip():
+        db_user.full_name = user_update.full_name.strip()
+    if user_update.phone is not None:
+        db_user.phone = user_update.phone.strip()
+    if user_update.store_name is not None:
+        db_user.store_name = user_update.store_name.strip()
+    if user_update.password is not None and user_update.password.strip():
+        import auth
+        db_user.hashed_password = auth.hash_password(user_update.password.strip())
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+def delete_user(db: Session, db_user: models.User):
+    """User account permanently delete karta hai"""
+    # Delete or unassign products belonging to this seller
+    db.query(models.Product).filter(models.Product.seller_id == db_user.id).delete()
+    db.delete(db_user)
+    db.commit()
+    return True
+
+
+
 
 # ===========================================================================
 # CATEGORIES CRUD
@@ -99,6 +124,23 @@ def delete_category(db: Session, category_id: str):
         db.commit()
         return True
     return False
+
+def update_category(db: Session, category_id: str, category_update: schemas.CategoryUpdate):
+    """Existing category ko update karta hai (UPDATE categories SET ...)"""
+    db_cat = get_category_by_id(db, category_id)
+    if not db_cat:
+        return None
+
+    update_data = category_update.model_dump(exclude_unset=True)
+    if "name" in update_data and update_data["name"]:
+        db_cat.slug = slugify(update_data["name"])
+
+    for key, value in update_data.items():
+        setattr(db_cat, key, value)
+
+    db.commit()
+    db.refresh(db_cat)
+    return db_cat
 
 
 # ===========================================================================

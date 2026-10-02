@@ -6,6 +6,7 @@ import {
   settingsAPI,
   enquiriesAPI
 } from "../services/api";
+import { useToast } from "./ToastContext";
 
 const defaultCompanyConfig = {
   name: "Oranza Living & Lifestyle",
@@ -21,6 +22,8 @@ const defaultCompanyConfig = {
 const CatalogContext = createContext();
 
 export function CatalogProvider({ children }) {
+  const { toast } = useToast();
+
   // 1. Live Products state - 100% DYNAMIC from FastAPI SQLite DB
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
@@ -127,57 +130,101 @@ export function CatalogProvider({ children }) {
 
   // Add Product (POST /api/v1/products)
   const addProduct = async (newProduct) => {
-    const created = await productsAPI.create(newProduct);
-    setProducts((prev) => [created, ...prev]);
-    
-    // Update category productCount
-    if (created.categoryId) {
-      setCategories((prev) =>
-        prev.map((cat) =>
-          cat.id === created.categoryId
-            ? { ...cat, productCount: (cat.productCount || 0) + 1 }
-            : cat
-        )
-      );
+    try {
+      const created = await productsAPI.create(newProduct);
+      setProducts((prev) => [created, ...prev]);
+      
+      // Update category productCount
+      if (created.categoryId) {
+        setCategories((prev) =>
+          prev.map((cat) =>
+            cat.id === created.categoryId
+              ? { ...cat, productCount: (cat.productCount || 0) + 1 }
+              : cat
+          )
+        );
+      }
+      toast.success(`"${created.title || 'Product'}" added successfully!`);
+      return created;
+    } catch (err) {
+      toast.error(err.message || "Failed to add product");
+      throw err;
     }
-    return created;
   };
 
   // Update Product (PUT /api/v1/products/{id})
   const updateProduct = async (id, updatedFields) => {
-    const updated = await productsAPI.update(id, updatedFields);
-    setProducts((prev) => prev.map((p) => (p.id === id ? updated : p)));
-    return updated;
+    try {
+      const updated = await productsAPI.update(id, updatedFields);
+      setProducts((prev) => prev.map((p) => (p.id === id ? updated : p)));
+      toast.success(`"${updated.title || 'Product'}" updated successfully!`);
+      return updated;
+    } catch (err) {
+      toast.error(err.message || "Failed to update product");
+      throw err;
+    }
   };
 
   // Delete Product (DELETE /api/v1/products/{id})
   const deleteProduct = async (id) => {
-    await productsAPI.delete(id);
-    const target = products.find((p) => p.id === id);
-    setProducts((prev) => prev.filter((p) => p.id !== id));
+    try {
+      const target = products.find((p) => p.id === id);
+      await productsAPI.delete(id);
+      setProducts((prev) => prev.filter((p) => p.id !== id));
 
-    if (target && target.categoryId) {
-      setCategories((prev) =>
-        prev.map((cat) =>
-          cat.id === target.categoryId
-            ? { ...cat, productCount: Math.max(0, (cat.productCount || 1) - 1) }
-            : cat
-        )
-      );
+      if (target && target.categoryId) {
+        setCategories((prev) =>
+          prev.map((cat) =>
+            cat.id === target.categoryId
+              ? { ...cat, productCount: Math.max(0, (cat.productCount || 1) - 1) }
+              : cat
+          )
+        );
+      }
+      toast.delete(`"${target?.title || 'Product'}" deleted from catalog!`);
+    } catch (err) {
+      toast.error(err.message || "Failed to delete product");
+      throw err;
     }
   };
 
   // Add Category (POST /api/v1/categories)
   const addCategory = async (catData) => {
-    const created = await categoriesAPI.create(catData);
-    setCategories((prev) => [...prev, created]);
-    return created;
+    try {
+      const created = await categoriesAPI.create(catData);
+      setCategories((prev) => [...prev, created]);
+      toast.success(`Category "${created.name}" created successfully!`);
+      return created;
+    } catch (err) {
+      toast.error(err.message || "Failed to add category");
+      throw err;
+    }
+  };
+
+  // Update Category (PUT /api/v1/categories/{id})
+  const updateCategory = async (id, updatedFields) => {
+    try {
+      const updated = await categoriesAPI.update(id, updatedFields);
+      setCategories((prev) => prev.map((c) => (c.id === id ? updated : c)));
+      toast.success(`Category "${updated.name}" updated successfully!`);
+      return updated;
+    } catch (err) {
+      toast.error(err.message || "Failed to update category");
+      throw err;
+    }
   };
 
   // Delete Category (DELETE /api/v1/categories/{id})
   const deleteCategory = async (id) => {
-    await categoriesAPI.delete(id);
-    setCategories((prev) => prev.filter((c) => c.id !== id));
+    try {
+      const cat = categories.find((c) => c.id === id);
+      await categoriesAPI.delete(id);
+      setCategories((prev) => prev.filter((c) => c.id !== id));
+      toast.delete(`Category "${cat?.name || id}" deleted!`);
+    } catch (err) {
+      toast.error(err.message || "Failed to delete category");
+      throw err;
+    }
   };
 
   // Record WhatsApp Enquiry Click (POST /api/v1/enquiries/click)
@@ -224,6 +271,37 @@ export function CatalogProvider({ children }) {
     setAuth({ isLoggedIn: false, user: null, token: null });
   };
 
+  // Update Profile (PUT /api/v1/auth/me)
+  const updateUserProfile = async (profileData) => {
+    try {
+      const updatedUser = await authAPI.updateProfile(profileData);
+      if (updatedUser) {
+        setAuth((prev) => ({
+          ...prev,
+          user: updatedUser
+        }));
+      }
+      toast.success("Account profile updated successfully!");
+      return updatedUser;
+    } catch (err) {
+      toast.error(err.message || "Failed to update profile");
+      throw err;
+    }
+  };
+
+  // Delete Account (DELETE /api/v1/auth/me)
+  const deleteAccount = async () => {
+    try {
+      await authAPI.deleteAccount();
+      localStorage.removeItem("oranza_jwt_token");
+      setAuth({ isLoggedIn: false, user: null, token: null });
+      toast.delete("Your account was permanently deleted!");
+    } catch (err) {
+      toast.error(err.message || "Failed to delete account");
+      throw err;
+    }
+  };
+
   // Refresh data from backend
   const refreshData = async () => {
     try {
@@ -256,14 +334,18 @@ export function CatalogProvider({ children }) {
         enquiryStats,
         company,
         loadingCompany,
+        toast,
         addProduct,
         updateProduct,
         deleteProduct,
         addCategory,
+        updateCategory,
         deleteCategory,
         recordEnquiry,
         login,
         logout,
+        updateUserProfile,
+        deleteAccount,
         refreshData
       }}
     >

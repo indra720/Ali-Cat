@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { CatalogProvider } from "./context/CatalogContext";
+import { ToastProvider } from "./context/ToastContext";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
@@ -17,6 +18,7 @@ import CategoriesPage from "./pages/CategoriesPage";
 import CategoriesManagePage from "./pages/CategoriesManagePage";
 import ContactPage from "./pages/ContactPage";
 import EditProductPage from "./pages/EditProductPage";
+import ProfilePage from "./pages/ProfilePage";
 import FloatingWhatsApp from "./components/FloatingWhatsApp";
 
 // Scroll to top on route change
@@ -30,10 +32,11 @@ function ScrollToTop() {
 
 export default function App() {
   return (
-    <CatalogProvider>
-      <BrowserRouter>
-        <ScrollToTop />
-        <div className="min-h-screen flex flex-col bg-surface text-ink antialiased">
+    <ToastProvider>
+      <CatalogProvider>
+        <BrowserRouter>
+          <ScrollToTop />
+          <div className="min-h-screen flex flex-col bg-surface text-ink antialiased">
           <Navbar />
           <main className="flex-1">
             <Routes>
@@ -52,6 +55,7 @@ export default function App() {
 
               {/* Seller / Admin Management Routes */}
               <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
               <Route path="/dashboard/products/new" element={<AddProductPage />} />
               <Route path="/dashboard/products/edit/:id" element={<EditProductPage />} />
               <Route path="/dashboard/categories" element={<CategoriesManagePage />} />
@@ -62,5 +66,6 @@ export default function App() {
         </div>
       </BrowserRouter>
     </CatalogProvider>
+  </ToastProvider>
   );
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { 
   Package, 
   Layers, 
@@ -10,14 +10,14 @@ import {
   Trash2, 
   Edit, 
   Play, 
-  LogOut, 
   Sparkles,
   TrendingUp,
   RotateCcw,
   Download,
   FileSpreadsheet,
   CheckCircle,
-  PhoneCall
+  PhoneCall,
+  AlertTriangle
 } from "lucide-react";
 import { useCatalog } from "../context/CatalogContext";
 import WhatsAppIcon from "../components/icons/WhatsAppIcon";
@@ -28,16 +28,31 @@ export default function DashboardPage() {
     products, 
     categories, 
     auth, 
-    logout, 
     deleteProduct, 
     enquiryStats, 
     refreshData 
   } = useCatalog();
-  const navigate = useNavigate();
 
   const [leads, setLeads] = useState([]);
   const [exportingLeads, setExportingLeads] = useState(false);
   const [exportingProducts, setExportingProducts] = useState(false);
+
+  // Delete product confirmation modal state
+  const [productToDelete, setProductToDelete] = useState(null);
+  const [deletingProduct, setDeletingProduct] = useState(false);
+
+  const handleConfirmDeleteProduct = async () => {
+    if (!productToDelete) return;
+    setDeletingProduct(true);
+    try {
+      await deleteProduct(productToDelete.id);
+      setProductToDelete(null);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setDeletingProduct(false);
+    }
+  };
 
   useEffect(() => {
     async function fetchLeads() {
@@ -82,27 +97,23 @@ export default function DashboardPage() {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate("/");
-  };
 
 
   const totalViews = products.reduce((acc, p) => acc + (p.views || 0), 0);
-  const totalEnquiries = enquiryStats.totalClicks || products.reduce((acc, p) => acc + (p.enquiries || 0), 0);
+  const totalEnquiries = products.reduce((acc, p) => acc + (p.enquiries || 0), 0);
 
   return (
-    <div className="min-h-screen bg-surface-secondary py-8 sm:py-10">
-      <div className="max-w-[1580px] mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+    <div className="min-h-screen bg-surface-secondary pt-3 sm:pt-4 pb-12">
+      <div className="max-w-[1580px] mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         {/* Top Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-2xl border border-gray-200 shadow-sm">
           <div>
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-oranza-100 text-oranza-800 uppercase tracking-wide">
                 Seller Console
               </span>
               <span className="text-xs text-ink-tertiary">
-                {auth.user?.company || "Oranza Living"}
+                {auth.user?.store_name || auth.user?.full_name || "Seller Console"}
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-ink mt-1">
@@ -150,15 +161,6 @@ export default function DashboardPage() {
               <Plus className="w-4 h-4" />
               <span>Add New Product</span>
             </Link>
-
-            <button
-              onClick={handleLogout}
-              className="px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 border border-red-200 rounded-brand flex items-center gap-1 transition-colors"
-              title="Sign Out"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Sign Out</span>
-            </button>
           </div>
 
         </div>
@@ -257,16 +259,33 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 text-ink">
-                {products.map((prod) => (
-                  <tr key={prod.id} className="hover:bg-oranza-50/30 transition-colors">
+                {products.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="text-center py-12 text-ink-secondary">
+                      <Package className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                      <p className="font-semibold text-sm text-ink">No items in catalog yet</p>
+                      <p className="text-xs text-ink-tertiary mt-1">
+                        Click &ldquo;Add New Product&rdquo; to publish your first item to your live catalog.
+                      </p>
+                    </td>
+                  </tr>
+                ) : (
+                  products.map((prod) => (
+                    <tr key={prod.id} className="hover:bg-oranza-50/30 transition-colors">
                     {/* Product & SKU */}
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
-                        <img
-                          src={prod.images?.[0] || "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=100&q=80"}
-                          alt={prod.title}
-                          className="w-12 h-12 rounded-lg object-cover border border-gray-200 shrink-0"
-                        />
+                        {prod.images?.[0] ? (
+                          <img
+                            src={prod.images[0]}
+                            alt={prod.title}
+                            className="w-12 h-12 rounded-lg object-cover border border-gray-200 shrink-0"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center shrink-0 text-gray-400">
+                            <Package className="w-5 h-5 text-gray-400" />
+                          </div>
+                        )}
                         <div>
                           <Link
                             to={`/products/${prod.slug}`}
@@ -346,11 +365,7 @@ export default function DashboardPage() {
                         </Link>
 
                         <button
-                          onClick={() => {
-                            if (window.confirm(`Delete "${prod.title}" from catalog?`)) {
-                              deleteProduct(prod.id);
-                            }
-                          }}
+                          onClick={() => setProductToDelete(prod)}
                           className="p-1.5 rounded-md hover:bg-red-50 text-gray-400 hover:text-red-600 transition-colors"
                           title="Delete Product"
                         >
@@ -359,7 +374,8 @@ export default function DashboardPage() {
                       </div>
                     </td>
                   </tr>
-                ))}
+                ))
+              )}
               </tbody>
             </table>
           </div>
@@ -462,6 +478,46 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+
+      {/* Product Delete Confirmation Modal */}
+      {productToDelete && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-5 shadow-2xl border border-gray-200 animate-in fade-in zoom-in-95 duration-200">
+            <div className="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+
+            <div className="text-center space-y-2">
+              <h3 className="text-lg font-bold text-ink">
+                Confirm Product Deletion?
+              </h3>
+              <p className="text-xs text-ink-secondary leading-relaxed">
+                Aap product <strong className="text-ink font-semibold">&ldquo;{productToDelete.title}&rdquo;</strong> ko catalog se delete karna chahte hain? Is action ko wapas nahi laya ja sakta.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                disabled={deletingProduct}
+                onClick={() => setProductToDelete(null)}
+                className="flex-1 py-2.5 rounded-brand border border-gray-300 text-xs font-semibold text-ink hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={deletingProduct}
+                onClick={handleConfirmDeleteProduct}
+                className="flex-1 py-2.5 rounded-brand bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>{deletingProduct ? "Deleting..." : "Yes, Delete"}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

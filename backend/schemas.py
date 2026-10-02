@@ -35,6 +35,12 @@ class UserLogin(BaseModel):
     email: str
     password: str
 
+class UserUpdate(BaseModel):
+    full_name: Optional[str] = None
+    phone: Optional[str] = None
+    store_name: Optional[str] = None
+    password: Optional[str] = Field(None, min_length=6, description="Optional new password")
+
 class UserResponse(UserBase):
     id: int
     is_active: bool

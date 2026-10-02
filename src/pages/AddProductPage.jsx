@@ -34,22 +34,15 @@ export default function AddProductPage() {
 
   // Images state (list of image URLs)
   const [imageUrlInput, setImageUrlInput] = useState("");
-  const [images, setImages] = useState([
-    "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=1200&q=80"
-  ]);
+  const [images, setImages] = useState([]);
 
   // Video state
-  const [hasVideo, setHasVideo] = useState(true);
-  const [videoUrl, setVideoUrl] = useState("https://www.youtube.com/embed/ScMzIvxBSi4");
-  const [videoTitle, setVideoTitle] = useState("Product Walkthrough & Texture Demonstration");
+  const [hasVideo, setHasVideo] = useState(false);
+  const [videoUrl, setVideoUrl] = useState("");
+  const [videoTitle, setVideoTitle] = useState("");
 
   // Dynamic Specifications key-value pairs
-  const [specifications, setSpecifications] = useState([
-    { id: "1", key: "Material", value: "Premium Fabric" },
-    { id: "2", key: "Color", value: "Brown / Orange" },
-    { id: "3", key: "Size", value: "7 ft" },
-    { id: "4", key: "Warranty", value: "3 Years Manufacturer Warranty" },
-  ]);
+  const [specifications, setSpecifications] = useState([]);
 
   const [uploadingImage, setUploadingImage] = useState(false);
   const [submittingProduct, setSubmittingProduct] = useState(false);
@@ -123,9 +116,7 @@ export default function AddProductPage() {
       fullDescription,
       whatsappNumber: whatsappNumber.replace(/[^0-9]/g, "") || company.defaultWhatsApp,
       isFeatured,
-      images: images.length > 0 ? images : [
-        "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=1200&q=80"
-      ],
+      images: images,
       video: hasVideo && videoUrl.trim() ? {
         type: "embed",
         url: videoUrl.trim(),
