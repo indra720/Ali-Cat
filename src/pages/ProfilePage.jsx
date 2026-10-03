@@ -21,12 +21,25 @@ import {
   CheckCircle2,
   Eye,
   EyeOff,
-  X
+  X,
+  Sliders,
+  Globe,
+  Building2,
+  Sparkles,
+  PhoneCall
 } from "lucide-react";
 import { useCatalog } from "../context/CatalogContext";
 
 export default function ProfilePage() {
-  const { auth, logout, updateUserProfile, deleteAccount, products } = useCatalog();
+  const { 
+    auth, 
+    logout, 
+    updateUserProfile, 
+    deleteAccount, 
+    products, 
+    company, 
+    updateStoreSettings 
+  } = useCatalog();
   const navigate = useNavigate();
 
   // If not logged in, redirect to login
@@ -36,7 +49,7 @@ export default function ProfilePage() {
     }
   }, [auth.isLoggedIn, navigate]);
 
-  // Form states
+  // Form states - User Profile
   const [fullName, setFullName] = useState(auth.user?.full_name || "");
   const [email, setEmail] = useState(auth.user?.email || "");
   const [storeName, setStoreName] = useState(auth.user?.store_name || "");
@@ -45,6 +58,17 @@ export default function ProfilePage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Form states - Store Settings (PUT /api/v1/settings)
+  const [storeSettingsName, setStoreSettingsName] = useState(company?.name || "");
+  const [storeSettingsTagline, setStoreSettingsTagline] = useState(company?.tagline || "");
+  const [storeSettingsWhatsApp, setStoreSettingsWhatsApp] = useState(company?.defaultWhatsApp || "");
+  const [storeSettingsPhoneDisplay, setStoreSettingsPhoneDisplay] = useState(company?.phoneDisplay || "");
+  const [storeSettingsEmail, setStoreSettingsEmail] = useState(company?.email || "");
+  const [storeSettingsAddress, setStoreSettingsAddress] = useState(company?.address || "");
+  const [storeSettingsInstagram, setStoreSettingsInstagram] = useState(company?.instagram || "");
+  const [storeSettingsCountText, setStoreSettingsCountText] = useState(company?.catalogCountText || "");
+  const [savingSettings, setSavingSettings] = useState(false);
 
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
@@ -63,6 +87,20 @@ export default function ProfilePage() {
       setPhone(auth.user.phone || "");
     }
   }, [auth.user]);
+
+  // Sync state if company settings change
+  useEffect(() => {
+    if (company) {
+      setStoreSettingsName(company.name || "");
+      setStoreSettingsTagline(company.tagline || "");
+      setStoreSettingsWhatsApp(company.defaultWhatsApp || "");
+      setStoreSettingsPhoneDisplay(company.phoneDisplay || "");
+      setStoreSettingsEmail(company.email || "");
+      setStoreSettingsAddress(company.address || "");
+      setStoreSettingsInstagram(company.instagram || "");
+      setStoreSettingsCountText(company.catalogCountText || "");
+    }
+  }, [company]);
 
   // Profile update handler
   const handleSubmit = async (e) => {
@@ -98,6 +136,32 @@ export default function ProfilePage() {
       setErrorMsg(err.message || "Failed to update profile.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Store Settings update handler (PUT /api/v1/settings)
+  const handleSaveStoreSettings = async (e) => {
+    e.preventDefault();
+    setErrorMsg("");
+    setSuccessMsg("");
+    setSavingSettings(true);
+    try {
+      const payload = {
+        name: storeSettingsName.trim(),
+        tagline: storeSettingsTagline.trim(),
+        default_whatsapp: storeSettingsWhatsApp.trim(),
+        phone_display: storeSettingsPhoneDisplay.trim(),
+        email: storeSettingsEmail.trim(),
+        address: storeSettingsAddress.trim(),
+        instagram: storeSettingsInstagram.trim(),
+        catalog_count_text: storeSettingsCountText.trim()
+      };
+      await updateStoreSettings(payload);
+      setSuccessMsg("Global Store & Catalog Settings updated in database!");
+    } catch (err) {
+      setErrorMsg(err.message || "Failed to update store settings.");
+    } finally {
+      setSavingSettings(false);
     }
   };
 
@@ -464,6 +528,174 @@ export default function ProfilePage() {
                 </div>
               </div>
 
+            </form>
+
+            {/* Form Card 3: Global Store & Catalog Settings (PUT /api/v1/settings) */}
+            <form onSubmit={handleSaveStoreSettings} className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 sm:p-8 space-y-6">
+              <div className="border-b border-gray-100 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <h2 className="text-lg font-bold text-ink flex items-center gap-2">
+                    <Sliders className="w-5 h-5 text-oranza-500" />
+                    <span>Store & Catalog Global Settings</span>
+                  </h2>
+                  <p className="text-xs text-ink-secondary mt-0.5">
+                    Live settings served across Navbar hotline, Footer info, and Contact page via SQLite.
+                  </p>
+                </div>
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 self-start sm:self-auto">
+                  API: /api/v1/settings
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                {/* Brand / Store Name */}
+                <div>
+                  <label className="block text-xs font-semibold text-ink mb-1.5">
+                    Store / Brand Name *
+                  </label>
+                  <div className="relative">
+                    <Building2 className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      required
+                      value={storeSettingsName}
+                      onChange={(e) => setStoreSettingsName(e.target.value)}
+                      placeholder="e.g. Oranza Living & Lifestyle"
+                      className="w-full pl-10 pr-3.5 py-2.5 rounded-brand border border-gray-300 text-xs focus:outline-none focus:border-oranza-500 focus:ring-2 focus:ring-oranza-500/20"
+                    />
+                  </div>
+                </div>
+
+                {/* Tagline */}
+                <div>
+                  <label className="block text-xs font-semibold text-ink mb-1.5">
+                    Brand Tagline / Slogan
+                  </label>
+                  <div className="relative">
+                    <Sparkles className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={storeSettingsTagline}
+                      onChange={(e) => setStoreSettingsTagline(e.target.value)}
+                      placeholder="e.g. Inspiring Spaces with Curated Design"
+                      className="w-full pl-10 pr-3.5 py-2.5 rounded-brand border border-gray-300 text-xs focus:outline-none focus:border-oranza-500 focus:ring-2 focus:ring-oranza-500/20"
+                    />
+                  </div>
+                </div>
+
+                {/* Default WhatsApp Hotline Number */}
+                <div>
+                  <label className="block text-xs font-semibold text-ink mb-1.5">
+                    WhatsApp Hotline Number (Numbers Only)
+                  </label>
+                  <div className="relative">
+                    <Phone className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={storeSettingsWhatsApp}
+                      onChange={(e) => setStoreSettingsWhatsApp(e.target.value)}
+                      placeholder="e.g. 919876543210"
+                      className="w-full pl-10 pr-3.5 py-2.5 rounded-brand border border-gray-300 text-xs focus:outline-none focus:border-oranza-500 focus:ring-2 focus:ring-oranza-500/20"
+                    />
+                  </div>
+                  <span className="text-[10px] text-gray-400 mt-1 block">
+                    Used for instant WhatsApp chat buttons & links.
+                  </span>
+                </div>
+
+                {/* Display Phone */}
+                <div>
+                  <label className="block text-xs font-semibold text-ink mb-1.5">
+                    Formatted Phone Display
+                  </label>
+                  <div className="relative">
+                    <PhoneCall className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={storeSettingsPhoneDisplay}
+                      onChange={(e) => setStoreSettingsPhoneDisplay(e.target.value)}
+                      placeholder="e.g. +91 98765 43210"
+                      className="w-full pl-10 pr-3.5 py-2.5 rounded-brand border border-gray-300 text-xs focus:outline-none focus:border-oranza-500 focus:ring-2 focus:ring-oranza-500/20"
+                    />
+                  </div>
+                  <span className="text-[10px] text-gray-400 mt-1 block">
+                    Visual format shown on Navbar and Footer.
+                  </span>
+                </div>
+
+                {/* Support Email */}
+                <div>
+                  <label className="block text-xs font-semibold text-ink mb-1.5">
+                    Official Support Email
+                  </label>
+                  <div className="relative">
+                    <Mail className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="email"
+                      value={storeSettingsEmail}
+                      onChange={(e) => setStoreSettingsEmail(e.target.value)}
+                      placeholder="e.g. catalog@oranzalifestyle.com"
+                      className="w-full pl-10 pr-3.5 py-2.5 rounded-brand border border-gray-300 text-xs focus:outline-none focus:border-oranza-500 focus:ring-2 focus:ring-oranza-500/20"
+                    />
+                  </div>
+                </div>
+
+                {/* Instagram URL */}
+                <div>
+                  <label className="block text-xs font-semibold text-ink mb-1.5">
+                    Instagram / Social Handle URL
+                  </label>
+                  <div className="relative">
+                    <Globe className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="url"
+                      value={storeSettingsInstagram}
+                      onChange={(e) => setStoreSettingsInstagram(e.target.value)}
+                      placeholder="e.g. https://instagram.com/oranza"
+                      className="w-full pl-10 pr-3.5 py-2.5 rounded-brand border border-gray-300 text-xs focus:outline-none focus:border-oranza-500 focus:ring-2 focus:ring-oranza-500/20"
+                    />
+                  </div>
+                </div>
+
+                {/* Catalog Count Text */}
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-ink mb-1.5">
+                    Catalog Count Badge Text
+                  </label>
+                  <input
+                    type="text"
+                    value={storeSettingsCountText}
+                    onChange={(e) => setStoreSettingsCountText(e.target.value)}
+                    placeholder="e.g. 500+ Curated Products"
+                    className="w-full px-3.5 py-2.5 rounded-brand border border-gray-300 text-xs focus:outline-none focus:border-oranza-500 focus:ring-2 focus:ring-oranza-500/20"
+                  />
+                </div>
+
+                {/* Showroom Address */}
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-ink mb-1.5">
+                    Physical Showroom / Office Address
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={storeSettingsAddress}
+                    onChange={(e) => setStoreSettingsAddress(e.target.value)}
+                    placeholder="Plot 42, Design District, Outer Ring Road, Bengaluru, India"
+                    className="w-full px-3.5 py-2.5 rounded-brand border border-gray-300 text-xs focus:outline-none focus:border-oranza-500 focus:ring-2 focus:ring-oranza-500/20"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2 flex items-center justify-end">
+                <button
+                  type="submit"
+                  disabled={savingSettings}
+                  className="px-8 py-3 rounded-brand bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold flex items-center gap-2 shadow-sm transition-all"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>{savingSettings ? "Updating Settings..." : "Save Store Settings (PUT /api/v1/settings)"}</span>
+                </button>
+              </div>
             </form>
 
           </div>

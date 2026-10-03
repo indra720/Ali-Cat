@@ -302,6 +302,21 @@ export function CatalogProvider({ children }) {
     }
   };
 
+  // Update Store Settings (PUT /api/v1/settings)
+  const updateStoreSettings = async (settingsData) => {
+    try {
+      const updated = await settingsAPI.update(settingsData);
+      if (updated) {
+        setCompany(updated);
+      }
+      toast.success("Store settings updated successfully!");
+      return updated;
+    } catch (err) {
+      toast.error(err.message || "Failed to update store settings");
+      throw err;
+    }
+  };
+
   // Refresh data from backend
   const refreshData = async () => {
     try {
@@ -346,6 +361,7 @@ export function CatalogProvider({ children }) {
         logout,
         updateUserProfile,
         deleteAccount,
+        updateStoreSettings,
         refreshData
       }}
     >

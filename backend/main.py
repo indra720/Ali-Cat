@@ -479,7 +479,7 @@ def get_store_settings(db: Session = Depends(get_db)):
 def update_store_settings(
     settings_data: schemas.SettingsUpdate,
     db: Session = Depends(get_db),
-    current_user = Depends(auth.require_admin)  # 🔒 Protected: Super Admin Only!
+    current_user = Depends(auth.require_seller_or_admin)  # 🔒 Protected: Seller or Admin!
 ):
     """
     Protected Endpoint:
