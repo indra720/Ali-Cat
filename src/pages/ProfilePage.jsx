@@ -29,6 +29,7 @@ import {
   PhoneCall
 } from "lucide-react";
 import { useCatalog } from "../context/CatalogContext";
+import { settingsAPI } from "../services/api";
 
 export default function ProfilePage() {
   const { 
@@ -88,7 +89,34 @@ export default function ProfilePage() {
     }
   }, [auth.user]);
 
-  // Sync state if company settings change
+  // Fetch freshest store settings from backend GET /api/v1/settings on mount
+  const [loadingSettings, setLoadingSettings] = useState(false);
+
+  useEffect(() => {
+    async function fetchLiveSettings() {
+      try {
+        setLoadingSettings(true);
+        const live = await settingsAPI.get();
+        if (live) {
+          setStoreSettingsName(live.name || "");
+          setStoreSettingsTagline(live.tagline || "");
+          setStoreSettingsWhatsApp(live.defaultWhatsApp || "");
+          setStoreSettingsPhoneDisplay(live.phoneDisplay || "");
+          setStoreSettingsEmail(live.email || "");
+          setStoreSettingsAddress(live.address || "");
+          setStoreSettingsInstagram(live.instagram || "");
+          setStoreSettingsCountText(live.catalogCountText || "");
+        }
+      } catch (e) {
+        console.warn("Could not fetch store settings:", e);
+      } finally {
+        setLoadingSettings(false);
+      }
+    }
+    fetchLiveSettings();
+  }, []);
+
+  // Sync state if company settings change in context
   useEffect(() => {
     if (company) {
       setStoreSettingsName(company.name || "");
@@ -530,7 +558,7 @@ export default function ProfilePage() {
 
             </form>
 
-            {/* Form Card 3: Global Store & Catalog Settings (PUT /api/v1/settings) */}
+            {/* Form Card 3: Global Store & Catalog Settings */}
             <form onSubmit={handleSaveStoreSettings} className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 sm:p-8 space-y-6">
               <div className="border-b border-gray-100 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
@@ -542,9 +570,31 @@ export default function ProfilePage() {
                     Live settings served across Navbar hotline, Footer info, and Contact page via SQLite.
                   </p>
                 </div>
-                <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 self-start sm:self-auto">
-                  API: /api/v1/settings
+                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 self-start sm:self-auto flex items-center gap-1.5 shadow-sm">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span>Live Storefront Data</span>
                 </span>
+              </div>
+
+              {/* Current Active Storefront Info Banner */}
+              <div className="p-4 rounded-2xl bg-surface-secondary border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
+                <div className="space-y-1">
+                  <div className="font-bold text-ink flex items-center gap-2">
+                    <span>{storeSettingsName || company.name}</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-oranza-100 text-oranza-800 font-semibold">
+                      {storeSettingsTagline || company.tagline}
+                    </span>
+                  </div>
+                  <div className="text-ink-secondary text-[11px] flex flex-wrap gap-x-4 gap-y-1">
+                    <span><strong className="text-gray-700">WhatsApp:</strong> {storeSettingsPhoneDisplay || company.phoneDisplay}</span>
+                    <span><strong className="text-gray-700">Email:</strong> {storeSettingsEmail || company.email}</span>
+                    <span><strong className="text-gray-700">Showroom:</strong> {storeSettingsAddress || company.address}</span>
+                  </div>
+                </div>
+                <div className="text-[11px] text-emerald-700 font-medium shrink-0 flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Synced with Database</span>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -693,7 +743,7 @@ export default function ProfilePage() {
                   className="px-8 py-3 rounded-brand bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold flex items-center gap-2 shadow-sm transition-all"
                 >
                   <Save className="w-4 h-4" />
-                  <span>{savingSettings ? "Updating Settings..." : "Save Store Settings (PUT /api/v1/settings)"}</span>
+                  <span>{savingSettings ? "Updating Settings..." : "Save Store Settings"}</span>
                 </button>
               </div>
             </form>
