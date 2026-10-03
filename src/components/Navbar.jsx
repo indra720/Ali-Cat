@@ -24,8 +24,8 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm transition-all">
       {/* Top micro bar for WhatsApp & direct contact */}
-      <div className="bg-oranza-50 text-oranza-900 border-b border-oranza-100/60 text-xs py-1.5 px-4 hidden sm:block">
-        <div className="max-w-[1580px] mx-auto flex items-center justify-between">
+      <div className="bg-oranza-50 text-oranza-900 border-b border-oranza-100/60 text-xs py-1.5 hidden sm:block">
+        <div className="max-w-[1600px] mx-auto px-3 sm:px-5 lg:px-6 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-oranza-500 animate-pulse"></span>
             <span className="font-medium text-ink">B2B & Retail Product Showcase</span>
@@ -47,7 +47,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      <div className="max-w-[1580px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1600px] mx-auto px-3 sm:px-5 lg:px-6">
         <div className="flex items-center justify-between h-16 sm:h-20">
           {/* Brand Logo */}
           <Link to="/" className="flex items-center gap-2.5 group">

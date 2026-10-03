@@ -14,10 +14,10 @@ export default function CategoryPage() {
   );
 
   return (
-    <div className="min-h-screen bg-surface-secondary py-10 sm:py-14">
-      <div className="max-w-[1580px] mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-surface-secondary pt-3 sm:pt-4 pb-12">
+      <div className="max-w-[1600px] mx-auto px-3 sm:px-5 lg:px-6">
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-xs text-ink-secondary mb-6">
+        <nav className="flex items-center gap-2 text-xs text-ink-secondary mb-3">
           <Link to="/" className="hover:text-oranza-600 transition-colors">Home</Link>
           <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
           <Link to="/catalog" className="hover:text-oranza-600 transition-colors">Catalog</Link>
@@ -26,7 +26,7 @@ export default function CategoryPage() {
         </nav>
 
         {/* Category Header Hero */}
-        <div className="relative rounded-3xl overflow-hidden bg-black text-white mb-10 shadow-md">
+        <div className="relative rounded-3xl overflow-hidden bg-black text-white mb-6 shadow-md">
           {category?.image && (
             <img
               src={category.image}

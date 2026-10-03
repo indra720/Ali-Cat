@@ -26,12 +26,12 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-surface">
       {/* 1. HERO SECTION */}
-      <section className="relative overflow-hidden bg-ambient-light pt-8 pb-10 sm:pt-12 sm:pb-14 border-b border-oranza-100/50">
+      <section className="relative overflow-hidden bg-ambient-light pt-4 pb-8 sm:pt-6 sm:pb-10 border-b border-oranza-100/50">
         {/* Decorative blur rings */}
         <div className="absolute top-1/4 right-0 w-96 h-96 bg-oranza-200/40 rounded-full blur-3xl pointer-events-none -mr-20"></div>
         <div className="absolute bottom-0 left-10 w-72 h-72 bg-oranza-100/50 rounded-full blur-2xl pointer-events-none"></div>
 
-        <div className="max-w-[1580px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="max-w-[1600px] mx-auto px-3 sm:px-5 lg:px-6 relative z-10">
           <div className="text-center max-w-6xl mx-auto space-y-4 sm:space-y-5">
             {/* Pill Tag */}
             <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/90 border border-oranza-200 shadow-sm text-xs font-semibold text-oranza-700 backdrop-blur-sm">
@@ -94,8 +94,8 @@ export default function HomePage() {
       </section>
 
       {/* 2. CATEGORIES SECTION */}
-      <section id="categories" className="py-16 sm:py-20 bg-surface-secondary border-b border-gray-200/60">
-        <div className="max-w-[1580px] mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="categories" className="py-12 sm:py-16 bg-surface-secondary border-b border-gray-200/60">
+        <div className="max-w-[1600px] mx-auto px-3 sm:px-5 lg:px-6">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-10">
             <div>
               <span className="text-xs font-bold text-oranza-600 uppercase tracking-widest bg-oranza-50 px-2.5 py-1 rounded-md">
@@ -162,8 +162,8 @@ export default function HomePage() {
       </section>
 
       {/* 3. FEATURED PRODUCTS SHOWCASE */}
-      <section className="py-16 sm:py-24 bg-white border-b border-gray-200/60">
-        <div className="max-w-[1580px] mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-12 sm:py-16 bg-white border-b border-gray-200/60">
+        <div className="max-w-[1600px] mx-auto px-3 sm:px-5 lg:px-6">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-12">
             <div>
               <div className="flex items-center gap-2">
@@ -214,8 +214,8 @@ export default function HomePage() {
       </section>
 
       {/* 4. WHY CATALOG SYSTEM (E-COMMERCE VS CATALOG HIGHLIGHT) */}
-      <section className="py-16 sm:py-20 bg-surface-secondary">
-        <div className="max-w-[1580px] mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-12 sm:py-16 bg-surface-secondary">
+        <div className="max-w-[1600px] mx-auto px-3 sm:px-5 lg:px-6">
           <div className="text-center max-w-2xl mx-auto mb-14">
             <span className="text-xs font-bold text-oranza-600 uppercase tracking-widest bg-oranza-50 px-2.5 py-1 rounded-md">
               Why Choose Our Catalog
@@ -263,8 +263,8 @@ export default function HomePage() {
       </section>
 
       {/* 5. CALL TO ACTION BANNER */}
-      <section id="contact" className="py-16 sm:py-20 bg-gradient-to-r from-oranza-600 via-oranza-500 to-amber-600 text-white relative overflow-hidden">
-        <div className="max-w-[1580px] mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 space-y-6">
+      <section id="contact" className="py-12 sm:py-16 bg-gradient-to-r from-oranza-600 via-oranza-500 to-amber-600 text-white relative overflow-hidden">
+        <div className="max-w-[1600px] mx-auto px-3 sm:px-5 lg:px-6 text-center relative z-10 space-y-6">
           <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
             Have a Specific Requirement or Custom Order?
           </h2>

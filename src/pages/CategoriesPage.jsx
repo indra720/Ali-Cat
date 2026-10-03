@@ -27,17 +27,17 @@ export default function CategoriesPage() {
   });
 
   return (
-    <div className="min-h-screen bg-surface-secondary py-10 sm:py-16">
-      <div className="max-w-[1580px] mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-surface-secondary pt-3 sm:pt-4 pb-12">
+      <div className="max-w-[1600px] mx-auto px-3 sm:px-5 lg:px-6">
         {/* Breadcrumbs */}
-        <nav className="flex items-center gap-2 text-xs text-ink-secondary mb-6">
+        <nav className="flex items-center gap-2 text-xs text-ink-secondary mb-3">
           <Link to="/" className="hover:text-oranza-600 transition-colors">Home</Link>
           <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
           <span className="text-ink font-semibold">Categories</span>
         </nav>
 
         {/* Hero Banner Header */}
-        <div className="relative rounded-3xl bg-gradient-to-r from-oranza-600 via-oranza-500 to-amber-600 text-white p-8 sm:p-12 mb-12 shadow-lg overflow-hidden">
+        <div className="relative rounded-3xl bg-gradient-to-r from-oranza-600 via-oranza-500 to-amber-600 text-white p-8 sm:p-12 mb-8 shadow-lg overflow-hidden">
           {/* Decorative background glow */}
           <div className="absolute -right-10 -bottom-10 w-72 h-72 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
 

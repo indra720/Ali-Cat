@@ -130,8 +130,8 @@ export default function ProfilePage() {
   ).length;
 
   return (
-    <div className="min-h-screen bg-surface-secondary py-8 sm:py-12">
-      <div className="max-w-[1580px] mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+    <div className="min-h-screen bg-surface-secondary pt-3 sm:pt-4 pb-12">
+      <div className="max-w-[1600px] mx-auto px-3 sm:px-5 lg:px-6 space-y-6">
         
         {/* Top Header Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-200">
@@ -152,17 +152,17 @@ export default function ProfilePage() {
             </h1>
           </div>
 
-          <div className="flex items-center gap-2.5">
-            <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1.5 shadow-sm">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+          <div className="flex items-center gap-2.5 shrink-0 flex-wrap sm:flex-nowrap">
+            <span className="px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1.5 shadow-sm shrink-0 whitespace-nowrap">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
               <span>JWT Bearer Active</span>
             </span>
             <button
               onClick={handleLogout}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3.5 py-1.5 rounded-brand border border-red-200 shadow-sm transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3.5 py-1.5 rounded-brand border border-red-200 shadow-sm transition-colors shrink-0 whitespace-nowrap"
             >
-              <LogOut className="w-3.5 h-3.5" />
-              <span>Sign Out</span>
+              <LogOut className="w-3.5 h-3.5 shrink-0" />
+              <span className="whitespace-nowrap">Sign Out</span>
             </button>
           </div>
         </div>
